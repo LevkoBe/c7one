@@ -53,9 +53,9 @@ export function PanelSplit({
       <PanelResizeHandle
         className={cn(
           "relative flex items-center justify-center",
-          "bg-transparent hover:bg-color-accent/20",
+          "bg-transparent hover:bg-accent/20",
           "transition-colors duration-transition-speed",
-          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-color-accent",
+          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
           direction === "horizontal"
             ? "w-1 cursor-col-resize"
             : "h-1 cursor-row-resize",
@@ -63,7 +63,7 @@ export function PanelSplit({
       >
         <div
           className={cn(
-            "bg-color-border rounded-full",
+            "bg-border rounded-full",
             direction === "horizontal" ? "w-px h-8" : "h-px w-8",
           )}
         />
