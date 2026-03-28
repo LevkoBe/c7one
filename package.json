@@ -1,6 +1,6 @@
 {
   "name": "@levkobe/c7one",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "C7ONE — One unified UI system governed by 7 core principles",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,11 +14,15 @@
     },
     "./styles": "./styles/index.css"
   },
-  "files": ["dist", "styles"],
+  "files": [
+    "dist",
+    "styles"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=19",
