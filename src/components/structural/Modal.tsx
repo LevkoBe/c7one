@@ -1,11 +1,11 @@
-import React from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { cn } from '../../utils/cn'
+import React from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { cn } from "../../utils/cn";
 
 export interface ModalProps {
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  children: React.ReactNode
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: React.ReactNode;
 }
 
 export function Modal({ open, onOpenChange, children }: ModalProps) {
@@ -13,10 +13,10 @@ export function Modal({ open, onOpenChange, children }: ModalProps) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {children}
     </Dialog.Root>
-  )
+  );
 }
 
-export const ModalTrigger = Dialog.Trigger
+export const ModalTrigger = Dialog.Trigger;
 
 export function ModalContent({
   className,
@@ -24,46 +24,49 @@ export function ModalContent({
   title,
   description,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { title?: string; description?: string }) {
+}: React.HTMLAttributes<HTMLDivElement> & {
+  title?: string;
+  description?: string;
+}) {
   return (
     <Dialog.Portal>
       <Dialog.Overlay
         className={cn(
-          'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         )}
       />
       <Dialog.Content
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-          'w-full max-w-lg',
-          'bg-[--color-bg-elevated] border-[length:--border-width] border-[--color-border]',
-          'rounded-[--radius] p-6 shadow-xl',
-          'transition-all duration-[--transition-speed]',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
+          "w-full max-w-lg",
+          "bg-bg-elevated border-[length:--border-width] border-border",
+          "rounded-[--radius] p-6 shadow-xl",
+          "transition-all duration-[--transition-speed]",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
         {...props}
       >
         {title && (
-          <Dialog.Title className="text-base font-semibold text-[--color-fg-primary] mb-1">
+          <Dialog.Title className="text-base font-semibold text-fg-primary mb-1">
             {title}
           </Dialog.Title>
         )}
         {description && (
-          <Dialog.Description className="text-sm text-[--color-fg-muted] mb-5">
+          <Dialog.Description className="text-sm text-fg-muted mb-5">
             {description}
           </Dialog.Description>
         )}
         {children}
         <Dialog.Close
           className={cn(
-            'absolute right-4 top-4 text-[--color-fg-muted] hover:text-[--color-fg-primary]',
-            'rounded-sm transition-colors duration-[--transition-speed]',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-accent]',
+            "absolute right-4 top-4 text-fg-muted hover:text-fg-primary",
+            "rounded-sm transition-colors duration-[--transition-speed]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
           )}
           aria-label="Close"
         >
@@ -76,8 +79,8 @@ export function ModalContent({
         </Dialog.Close>
       </Dialog.Content>
     </Dialog.Portal>
-  )
+  );
 }
 
-Modal.Trigger = ModalTrigger
-Modal.Content = ModalContent
+Modal.Trigger = ModalTrigger;
+Modal.Content = ModalContent;

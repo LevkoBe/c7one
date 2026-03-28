@@ -13,13 +13,10 @@ export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const alertVariants: Record<AlertVariant, string> = {
-  info: "bg-[--color-accent]/10    border-[--color-accent]/30    text-[--color-accent]",
-  success:
-    "bg-[--color-success]/10  border-[--color-success]/30  text-[--color-success]",
-  warning:
-    "bg-[--color-warning]/10  border-[--color-warning]/30  text-[--color-warning]",
-  error:
-    "bg-[--color-error]/10    border-[--color-error]/30    text-[--color-error]",
+  info: "bg-accent/10    border-accent/30    text-accent",
+  success: "bg-success/10  border-success/30  text-success",
+  warning: "bg-warning/10  border-warning/30  text-warning",
+  error: "bg-error/10    border-error/30    text-error",
 };
 
 export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
@@ -62,7 +59,7 @@ export function Spinner({ size = "md", className }: SpinnerProps) {
       role="status"
       aria-label="Loading"
       className={cn(
-        "block rounded-full border-[--color-border] border-t-[--color-accent] animate-spin",
+        "block rounded-full border-border border-t-accent animate-spin",
         spinnerSizes[size],
         className,
       )}
@@ -83,13 +80,13 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       value={value}
       max={max}
       className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full bg-[--color-bg-overlay]",
+        "relative h-2 w-full overflow-hidden rounded-full bg-bg-overlay",
         className,
       )}
       {...props}
     >
       <RadixProgress.Indicator
-        className="h-full bg-[--color-accent] transition-all duration-[--transition-speed] ease-in-out"
+        className="h-full bg-accent transition-all duration-[--transition-speed] ease-in-out"
         style={{ width: `${((value ?? 0) / (max ?? 100)) * 100}%` }}
       />
     </RadixProgress.Root>
@@ -108,7 +105,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
     <div
       ref={ref}
       className={cn(
-        "animate-pulse bg-[--color-bg-overlay]",
+        "animate-pulse bg-bg-overlay",
         rounded ? "rounded-full" : "rounded-[--radius]",
         className,
       )}
@@ -145,10 +142,10 @@ export interface ToastProps extends RadixToast.ToastProps {
 }
 
 const toastVariants: Record<ToastVariant, string> = {
-  default: "border-[--color-border]",
-  success: "border-[--color-success]/40",
-  warning: "border-[--color-warning]/40",
-  error: "border-[--color-error]/40",
+  default: "border-border",
+  success: "border-success/40",
+  warning: "border-warning/40",
+  error: "border-error/40",
 };
 
 export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
@@ -157,7 +154,7 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
       ref={ref}
       className={cn(
         "flex flex-col gap-1 rounded-[--radius] p-4",
-        "bg-[--color-bg-elevated] border-[length:--border-width]",
+        "bg-bg-elevated border-[length:--border-width]",
         "shadow-xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
@@ -168,12 +165,12 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
       {...props}
     >
       {title && (
-        <RadixToast.Title className="text-sm font-semibold text-[--color-fg-primary]">
+        <RadixToast.Title className="text-sm font-semibold text-fg-primary">
           {title}
         </RadixToast.Title>
       )}
       {description && (
-        <RadixToast.Description className="text-xs text-[--color-fg-muted]">
+        <RadixToast.Description className="text-xs text-fg-muted">
           {description}
         </RadixToast.Description>
       )}

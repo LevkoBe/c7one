@@ -17,13 +17,13 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       ref={ref}
       className={cn(
         "w-full min-h-[80px] px-3 py-2 text-sm resize-y",
-        "bg-[--color-bg-elevated] text-[--color-fg-primary]",
+        "bg-bg-elevated text-fg-primary",
         "border-[length:--border-width] rounded-[--radius]",
-        "placeholder:text-[--color-fg-disabled]",
+        "placeholder:text-fg-disabled",
         "transition-[border-color,box-shadow] duration-[--transition-speed]",
-        "focus:outline-none focus:ring-2 focus:ring-[--color-accent] focus:ring-offset-1 focus:ring-offset-[--color-bg-base]",
+        "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-bg-base",
         "disabled:opacity-50 disabled:cursor-not-allowed",
-        error ? "border-[--color-error]" : "border-[--color-border]",
+        error ? "border-error" : "border-border",
         className,
       )}
       {...props}
@@ -46,17 +46,17 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
         id={id}
         className={cn(
           "size-4 rounded-[calc(var(--radius)*0.5)] shrink-0",
-          "border-[length:--border-width] border-[--color-border]",
-          "bg-[--color-bg-elevated]",
+          "border-[length:--border-width] border-border",
+          "bg-bg-elevated",
           "transition-[background-color,border-color] duration-[--transition-speed]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-accent]",
-          "data-[state=checked]:bg-[--color-accent] data-[state=checked]:border-[--color-accent]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          "data-[state=checked]:bg-accent data-[state=checked]:border-accent",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className,
         )}
         {...props}
       >
-        <RadixCheckbox.Indicator className="flex items-center justify-center text-[--color-bg-base]">
+        <RadixCheckbox.Indicator className="flex items-center justify-center text-bg-base">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path
               d="M1.5 5L4 7.5L8.5 2.5"
@@ -71,7 +71,7 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
       {label && (
         <label
           htmlFor={id}
-          className="text-sm text-[--color-fg-primary] cursor-pointer select-none"
+          className="text-sm text-fg-primary cursor-pointer select-none"
         >
           {label}
         </label>
@@ -96,9 +96,9 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         className={cn(
           "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full",
           "border-[length:--border-width] border-transparent",
-          "bg-[--color-bg-overlay] transition-colors duration-[--transition-speed]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-accent]",
-          "data-[state=checked]:bg-[--color-accent]",
+          "bg-bg-overlay transition-colors duration-[--transition-speed]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          "data-[state=checked]:bg-accent",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className,
         )}
@@ -115,7 +115,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
       {label && (
         <label
           htmlFor={id}
-          className="text-sm text-[--color-fg-primary] cursor-pointer select-none"
+          className="text-sm text-fg-primary cursor-pointer select-none"
         >
           {label}
         </label>
@@ -142,17 +142,17 @@ export const Slider = React.forwardRef<HTMLSpanElement, SliderProps>(
         )}
         {...props}
       >
-        <RadixSlider.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-[--color-bg-overlay]">
-          <RadixSlider.Range className="absolute h-full bg-[--color-accent] transition-all duration-[--transition-speed]" />
+        <RadixSlider.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-bg-overlay">
+          <RadixSlider.Range className="absolute h-full bg-accent transition-all duration-[--transition-speed]" />
         </RadixSlider.Track>
         {(props.value ?? props.defaultValue ?? [0]).map((_, i) => (
           <RadixSlider.Thumb
             key={i}
             className={cn(
-              "block size-4 rounded-full bg-[--color-accent]",
-              "border-2 border-[--color-bg-base]",
+              "block size-4 rounded-full bg-accent",
+              "border-2 border-bg-base",
               "shadow-sm transition-transform duration-[--transition-speed]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-accent]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
               "hover:scale-110",
               "disabled:pointer-events-none disabled:opacity-50",
             )}
@@ -160,7 +160,7 @@ export const Slider = React.forwardRef<HTMLSpanElement, SliderProps>(
         ))}
       </RadixSlider.Root>
       {showValue && (
-        <span className="text-xs text-[--color-fg-muted] w-8 text-right tabular-nums">
+        <span className="text-xs text-fg-muted w-8 text-right tabular-nums">
           {props.value?.[0] ?? props.defaultValue?.[0] ?? 0}
         </span>
       )}
@@ -194,11 +194,11 @@ export function Select({
       <RadixSelect.Trigger
         className={cn(
           "flex h-9 w-full items-center justify-between px-3 text-sm",
-          "bg-[--color-bg-elevated] text-[--color-fg-primary]",
-          "border-[length:--border-width] border-[--color-border] rounded-[--radius]",
+          "bg-bg-elevated text-fg-primary",
+          "border-[length:--border-width] border-border rounded-[--radius]",
           "transition-[border-color,box-shadow] duration-[--transition-speed]",
-          "focus:outline-none focus:ring-2 focus:ring-[--color-accent] focus:ring-offset-1 focus:ring-offset-[--color-bg-base]",
-          "data-placeholder:text-[--color-fg-disabled]",
+          "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-bg-base",
+          "data-placeholder:text-fg-disabled",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className,
         )}
@@ -220,7 +220,7 @@ export function Select({
         <RadixSelect.Content
           className={cn(
             "relative z-50 min-w-[8rem] overflow-hidden",
-            "bg-[--color-bg-elevated] border-[length:--border-width] border-[--color-border]",
+            "bg-bg-elevated border-[length:--border-width] border-border",
             "rounded-[--radius] shadow-xl",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -238,9 +238,9 @@ export function Select({
                 className={cn(
                   "relative flex cursor-pointer select-none items-center",
                   "rounded-[calc(var(--radius)*0.75)] px-3 py-1.5 text-sm",
-                  "text-[--color-fg-primary] outline-none",
+                  "text-fg-primary outline-none",
                   "transition-colors duration-[--transition-speed]",
-                  "focus:bg-[--color-bg-overlay] focus:text-[--color-fg-primary]",
+                  "focus:bg-bg-overlay focus:text-fg-primary",
                   "data-disabled:pointer-events-none data-disabled:opacity-50",
                 )}
               >

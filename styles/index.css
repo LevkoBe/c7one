@@ -11,36 +11,36 @@
 /*    Tailwind @theme registers them so bg-bg-base, text-fg-primary etc work.  */
 @theme {
   /* Background */
-  --color-bg-base:      #0f0f0f;
-  --color-bg-elevated:  #1a1a1a;
-  --color-bg-overlay:   #242424;
+  --color-bg-base: #0f0f0f;
+  --color-bg-elevated: #1a1a1a;
+  --color-bg-overlay: #242424;
 
   /* Foreground */
-  --color-fg-primary:   #f2f2f2;
-  --color-fg-muted:     #a1a1a1;
-  --color-fg-disabled:  #555555;
+  --color-fg-primary: #f2f2f2;
+  --color-fg-muted: #a1a1a1;
+  --color-fg-disabled: #555555;
 
   /* Accent */
-  --color-accent:       #6366f1;
+  --color-accent: #6366f1;
   --color-accent-hover: #818cf8;
 
   /* Semantic */
-  --color-success:      #22c55e;
-  --color-warning:      #f59e0b;
-  --color-error:        #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
 
   /* Border */
-  --color-border:       #2e2e2e;
+  --color-border: #2e2e2e;
 
   /* Shape */
-  --radius:             0.375rem;
-  --border-width:       1px;
+  --radius: 0.375rem;
+  --border-width: 1px;
 
   /* Motion */
-  --transition-speed:   200ms;
+  --transition-speed: 200ms;
 
   /* Depth */
-  --shadow-intensity:   0;
+  --shadow-intensity: 0;
 }
 
 /* ── Base layer ───────────────────────────────────────────────────────────── */
@@ -85,7 +85,11 @@
   .design-glass [data-glass-surface] {
     backdrop-filter: blur(12px) saturate(140%);
     -webkit-backdrop-filter: blur(12px) saturate(140%);
-    background-color: color-mix(in srgb, var(--color-bg-elevated) 60%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-bg-elevated) 60%,
+      transparent
+    );
     border-color: color-mix(in srgb, var(--color-border) 50%, transparent);
   }
 
