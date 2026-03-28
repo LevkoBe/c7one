@@ -30,7 +30,7 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
         ref={ref}
         className={cn(
           "w-full bg-bg-base border-b border-border",
-          "transition-[background-color,border-color] duration-[--transition-speed]",
+          "transition-[background-color,border-color] duration-transition-speed",
           sticky && "sticky top-0 z-40",
           className,
         )}
@@ -54,7 +54,7 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
                 }}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-[calc(var(--radius)*0.75)]",
-                  "transition-colors duration-[--transition-speed]",
+                  "transition-colors duration-transition-speed",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                   item.active
                     ? "bg-bg-elevated text-fg-primary font-medium"
@@ -78,7 +78,7 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
           {/* Mobile hamburger */}
           {items.length > 0 && (
             <button
-              className="ml-auto md:hidden flex flex-col gap-1.5 p-1.5 rounded-[calc(var(--radius)*0.75)] text-fg-muted hover:text-fg-primary hover:bg-bg-elevated transition-colors duration-[--transition-speed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="ml-auto md:hidden flex flex-col gap-1.5 p-1.5 rounded-[calc(var(--radius)*0.75)] text-fg-muted hover:text-fg-primary hover:bg-bg-elevated transition-colors duration-transition-speed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((v) => !v)}
@@ -119,7 +119,7 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
                 }}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 text-sm rounded-[calc(var(--radius)*0.75)]",
-                  "transition-colors duration-[--transition-speed]",
+                  "transition-colors duration-transition-speed",
                   item.active
                     ? "bg-bg-elevated text-fg-primary font-medium"
                     : "text-fg-muted hover:bg-bg-elevated hover:text-fg-primary",
@@ -176,7 +176,7 @@ export const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       className={cn(
         "flex flex-col h-full overflow-hidden",
         "bg-bg-elevated border-r border-border",
-        "transition-[width] duration-[--transition-speed]",
+        "transition-[width] duration-transition-speed",
         className,
       )}
       aria-label="Sidebar navigation"
@@ -214,7 +214,7 @@ export const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                 title={collapsed ? item.label : undefined}
                 className={cn(
                   "flex items-center gap-2.5 mx-2 rounded-[calc(var(--radius)*0.75)]",
-                  "text-sm transition-colors duration-[--transition-speed]",
+                  "text-sm transition-colors duration-transition-speed",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                   collapsed ? "px-2 py-2 justify-center" : "px-3 py-2",
                   item.active

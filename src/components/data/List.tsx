@@ -35,7 +35,7 @@ export function List<T>({
   return (
     <ul
       className={cn(
-        "rounded-[--radius] border-[length:--border-width] border-border overflow-hidden",
+        "rounded-radius border-[length:--border-width] border-border overflow-hidden",
         className,
       )}
       role="list"
@@ -76,7 +76,7 @@ export function ListItem({
     <div
       className={cn(
         "flex items-center gap-3 px-4 py-3",
-        "transition-colors duration-[--transition-speed]",
+        "transition-colors duration-transition-speed",
         props.onClick && "cursor-pointer hover:bg-bg-overlay",
         className,
       )}

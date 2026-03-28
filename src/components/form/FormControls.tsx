@@ -18,9 +18,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       className={cn(
         "w-full min-h-[80px] px-3 py-2 text-sm resize-y",
         "bg-bg-elevated text-fg-primary",
-        "border-[length:--border-width] rounded-[--radius]",
+        "border-[length:--border-width] rounded-radius",
         "placeholder:text-fg-disabled",
-        "transition-[border-color,box-shadow] duration-[--transition-speed]",
+        "transition-[border-color,box-shadow] duration-transition-speed",
         "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-bg-base",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         error ? "border-error" : "border-border",
@@ -48,7 +48,7 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
           "size-4 rounded-[calc(var(--radius)*0.5)] shrink-0",
           "border-[length:--border-width] border-border",
           "bg-bg-elevated",
-          "transition-[background-color,border-color] duration-[--transition-speed]",
+          "transition-[background-color,border-color] duration-transition-speed",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
           "data-[state=checked]:bg-accent data-[state=checked]:border-accent",
           "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -96,7 +96,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         className={cn(
           "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full",
           "border-[length:--border-width] border-transparent",
-          "bg-bg-overlay transition-colors duration-[--transition-speed]",
+          "bg-bg-overlay transition-colors duration-transition-speed",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
           "data-[state=checked]:bg-accent",
           "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -107,7 +107,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         <RadixSwitch.Thumb
           className={cn(
             "pointer-events-none block size-4 rounded-full bg-white shadow-sm",
-            "transition-transform duration-[--transition-speed]",
+            "transition-transform duration-transition-speed",
             "translate-x-0 data-[state=checked]:translate-x-4",
           )}
         />
@@ -143,7 +143,7 @@ export const Slider = React.forwardRef<HTMLSpanElement, SliderProps>(
         {...props}
       >
         <RadixSlider.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-bg-overlay">
-          <RadixSlider.Range className="absolute h-full bg-accent transition-all duration-[--transition-speed]" />
+          <RadixSlider.Range className="absolute h-full bg-accent transition-all duration-transition-speed" />
         </RadixSlider.Track>
         {(props.value ?? props.defaultValue ?? [0]).map((_, i) => (
           <RadixSlider.Thumb
@@ -151,7 +151,7 @@ export const Slider = React.forwardRef<HTMLSpanElement, SliderProps>(
             className={cn(
               "block size-4 rounded-full bg-accent",
               "border-2 border-bg-base",
-              "shadow-sm transition-transform duration-[--transition-speed]",
+              "shadow-sm transition-transform duration-transition-speed",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
               "hover:scale-110",
               "disabled:pointer-events-none disabled:opacity-50",
@@ -195,8 +195,8 @@ export function Select({
         className={cn(
           "flex h-9 w-full items-center justify-between px-3 text-sm",
           "bg-bg-elevated text-fg-primary",
-          "border-[length:--border-width] border-border rounded-[--radius]",
-          "transition-[border-color,box-shadow] duration-[--transition-speed]",
+          "border-[length:--border-width] border-border rounded-radius",
+          "transition-[border-color,box-shadow] duration-transition-speed",
           "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-bg-base",
           "data-placeholder:text-fg-disabled",
           "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -221,7 +221,7 @@ export function Select({
           className={cn(
             "relative z-50 min-w-[8rem] overflow-hidden",
             "bg-bg-elevated border-[length:--border-width] border-border",
-            "rounded-[--radius] shadow-xl",
+            "rounded-radius shadow-xl",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -239,7 +239,7 @@ export function Select({
                   "relative flex cursor-pointer select-none items-center",
                   "rounded-[calc(var(--radius)*0.75)] px-3 py-1.5 text-sm",
                   "text-fg-primary outline-none",
-                  "transition-colors duration-[--transition-speed]",
+                  "transition-colors duration-transition-speed",
                   "focus:bg-bg-overlay focus:text-fg-primary",
                   "data-disabled:pointer-events-none data-disabled:opacity-50",
                 )}

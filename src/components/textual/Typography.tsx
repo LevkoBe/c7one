@@ -118,7 +118,7 @@ export const Code = React.forwardRef<HTMLElement, CodeProps>(
         <pre
           className={cn(
             "bg-bg-overlay border-[length:--border-width] border-border",
-            "rounded-[--radius] p-4 overflow-x-auto",
+            "rounded-radius p-4 overflow-x-auto",
             className,
           )}
         >

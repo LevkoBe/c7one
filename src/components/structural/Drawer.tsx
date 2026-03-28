@@ -52,7 +52,7 @@ export function DrawerContent({
       >
         {children}
         <Dialog.Close
-          className="absolute right-4 top-4 text-fg-muted hover:text-fg-primary transition-colors duration-[--transition-speed] rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="absolute right-4 top-4 text-fg-muted hover:text-fg-primary transition-colors duration-transition-speed rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           aria-label="Close"
         >
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">

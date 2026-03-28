@@ -70,7 +70,7 @@ export function DataGrid<T extends object>({
   return (
     <div
       className={cn(
-        "w-full overflow-hidden rounded-[--radius]",
+        "w-full overflow-hidden rounded-radius",
         "border-[length:--border-width] border-border",
         className,
       )}
@@ -138,7 +138,7 @@ export function DataGrid<T extends object>({
                   }}
                   className={cn(
                     "flex border-b border-border last:border-0",
-                    "transition-colors duration-[--transition-speed]",
+                    "transition-colors duration-transition-speed",
                     isSelected
                       ? "bg-accent/10"
                       : "bg-bg-base hover:bg-bg-elevated",

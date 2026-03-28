@@ -64,7 +64,7 @@ export function Gallery<T>({
         <div
           key={keyExtractor ? keyExtractor(item, i) : i}
           className={cn(
-            "overflow-hidden rounded-[--radius]",
+            "overflow-hidden rounded-radius",
             aspect !== "auto" && aspectClasses[aspect],
           )}
         >
@@ -100,7 +100,7 @@ export function GalleryCard({
       className={cn(
         "relative group w-full h-full",
         "bg-bg-elevated border-[length:--border-width] border-border",
-        "overflow-hidden transition-[transform,box-shadow] duration-[--transition-speed]",
+        "overflow-hidden transition-[transform,box-shadow] duration-transition-speed",
         "hover:scale-[1.02]",
         className,
       )}

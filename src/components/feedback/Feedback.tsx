@@ -25,7 +25,7 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       ref={ref}
       role="alert"
       className={cn(
-        "rounded-[--radius] border-[length:--border-width] p-4",
+        "rounded-radius border-[length:--border-width] p-4",
         alertVariants[variant],
         className,
       )}
@@ -86,7 +86,7 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       {...props}
     >
       <RadixProgress.Indicator
-        className="h-full bg-accent transition-all duration-[--transition-speed] ease-in-out"
+        className="h-full bg-accent transition-all duration-transition-speed ease-in-out"
         style={{ width: `${((value ?? 0) / (max ?? 100)) * 100}%` }}
       />
     </RadixProgress.Root>
@@ -106,7 +106,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       ref={ref}
       className={cn(
         "animate-pulse bg-bg-overlay",
-        rounded ? "rounded-full" : "rounded-[--radius]",
+        rounded ? "rounded-full" : "rounded-radius",
         className,
       )}
       {...props}
@@ -153,7 +153,7 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
     <RadixToast.Root
       ref={ref}
       className={cn(
-        "flex flex-col gap-1 rounded-[--radius] p-4",
+        "flex flex-col gap-1 rounded-radius p-4",
         "bg-bg-elevated border-[length:--border-width]",
         "shadow-xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",

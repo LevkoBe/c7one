@@ -101,7 +101,7 @@ export function Table<T extends object>({
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="w-full overflow-x-auto rounded-[--radius] border-[length:--border-width] border-border">
+      <div className="w-full overflow-x-auto rounded-radius border-[length:--border-width] border-border">
         <table className="w-full border-collapse text-sm">
           <thead className={cn(stickyHeader && "sticky top-0 z-10")}>
             <tr className="bg-bg-elevated">
@@ -113,7 +113,7 @@ export function Table<T extends object>({
                     "px-4 py-3 font-semibold text-fg-muted border-b border-border",
                     alignClass[col.align ?? "left"],
                     col.sortable &&
-                      "cursor-pointer select-none group hover:text-fg-primary transition-colors duration-[--transition-speed]",
+                      "cursor-pointer select-none group hover:text-fg-primary transition-colors duration-transition-speed",
                   )}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
                   aria-sort={
@@ -153,7 +153,7 @@ export function Table<T extends object>({
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={cn(
                     "border-b border-border last:border-0",
-                    "bg-bg-base transition-colors duration-[--transition-speed]",
+                    "bg-bg-base transition-colors duration-transition-speed",
                     onRowClick && "cursor-pointer hover:bg-bg-elevated",
                     rowClassName?.(row, i),
                   )}
@@ -212,7 +212,7 @@ export function Pagination({
       <button
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className="px-2 py-1 text-xs rounded-[calc(var(--radius)*0.75)] text-fg-muted hover:bg-bg-elevated disabled:opacity-40 disabled:pointer-events-none transition-colors duration-[--transition-speed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="px-2 py-1 text-xs rounded-[calc(var(--radius)*0.75)] text-fg-muted hover:bg-bg-elevated disabled:opacity-40 disabled:pointer-events-none transition-colors duration-transition-speed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         ←
       </button>
@@ -222,7 +222,7 @@ export function Pagination({
           onClick={() => onPageChange(p)}
           className={cn(
             "w-7 h-7 text-xs rounded-[calc(var(--radius)*0.75)]",
-            "transition-colors duration-[--transition-speed]",
+            "transition-colors duration-transition-speed",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
             p === page
               ? "bg-accent text-bg-base font-semibold"
@@ -235,7 +235,7 @@ export function Pagination({
       <button
         disabled={page >= pageCount}
         onClick={() => onPageChange(page + 1)}
-        className="px-2 py-1 text-xs rounded-[calc(var(--radius)*0.75)] text-fg-muted hover:bg-bg-elevated disabled:opacity-40 disabled:pointer-events-none transition-colors duration-[--transition-speed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="px-2 py-1 text-xs rounded-[calc(var(--radius)*0.75)] text-fg-muted hover:bg-bg-elevated disabled:opacity-40 disabled:pointer-events-none transition-colors duration-transition-speed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         →
       </button>

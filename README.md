@@ -242,7 +242,7 @@ That's the entire setup. Components then use tokens like:
 
 ```tsx
 className =
-  "bg-bg-elevated text-fg-primary border-border rounded-[--radius] border-[length:--border-width]";
+  "bg-bg-elevated text-fg-primary border-border rounded-radius border-[length:--border-width]";
 ```
 
 And design mode variants:
