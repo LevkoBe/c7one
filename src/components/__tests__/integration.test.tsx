@@ -327,6 +327,104 @@ describe("PanelVisibilityProvider — integration with component tree", () => {
   });
 });
 
+// ─── 3d: multi-panel tree — independent visibility per panel ──────────────────
+//
+// Simulates a real layout: a root shell that contains three independently-
+// managed panels (sidebar, toolbar, content). Each panel is a separate
+// component that consumes usePanelVisibility for its own id. This mirrors the
+// "PanelRoot + PanelSplit + PanelLeaf" nesting described in the test plan —
+// the provider acts as PanelRoot, component groups act as splits, and each
+// leaf renders conditionally based on its own visibility state.
+
+describe("multi-panel tree — sidebar + toolbar + content", () => {
+  function Sidebar() {
+    const { visible, toggle } = usePanelVisibility("sidebar");
+    return (
+      <div>
+        <button onClick={toggle}>toggle-sidebar</button>
+        {visible && <nav>Sidebar</nav>}
+      </div>
+    );
+  }
+
+  function Toolbar() {
+    const { visible, toggle } = usePanelVisibility("toolbar");
+    return (
+      <div>
+        <button onClick={toggle}>toggle-toolbar</button>
+        {visible && <div role="toolbar">Toolbar</div>}
+      </div>
+    );
+  }
+
+  function Content() {
+    const { visible } = usePanelVisibility("content");
+    return visible ? <main>Content</main> : null;
+  }
+
+  function Shell() {
+    return (
+      <PanelVisibilityProvider>
+        <Sidebar />
+        <Toolbar />
+        <Content />
+      </PanelVisibilityProvider>
+    );
+  }
+
+  it("all three panels are visible by default", () => {
+    render(<Shell />);
+    expect(screen.getByText("Sidebar")).toBeInTheDocument();
+    expect(screen.getByText("Toolbar")).toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
+  it("hiding sidebar does not affect toolbar or content", () => {
+    render(<Shell />);
+    fireEvent.click(screen.getByText("toggle-sidebar"));
+    expect(screen.queryByText("Sidebar")).not.toBeInTheDocument();
+    expect(screen.getByText("Toolbar")).toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
+  it("hiding toolbar does not affect sidebar or content", () => {
+    render(<Shell />);
+    fireEvent.click(screen.getByText("toggle-toolbar"));
+    expect(screen.getByText("Sidebar")).toBeInTheDocument();
+    expect(screen.queryByText("Toolbar")).not.toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
+  it("hiding sidebar then restoring: sidebar comes back, others unaffected", () => {
+    render(<Shell />);
+    fireEvent.click(screen.getByText("toggle-sidebar"));
+    fireEvent.click(screen.getByText("toggle-sidebar"));
+    expect(screen.getByText("Sidebar")).toBeInTheDocument();
+    expect(screen.getByText("Toolbar")).toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
+  it("hiding both sidebar and toolbar independently: content still visible", () => {
+    render(<Shell />);
+    fireEvent.click(screen.getByText("toggle-sidebar"));
+    fireEvent.click(screen.getByText("toggle-toolbar"));
+    expect(screen.queryByText("Sidebar")).not.toBeInTheDocument();
+    expect(screen.queryByText("Toolbar")).not.toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
+  it("restoring both after hiding: all three panels visible again", () => {
+    render(<Shell />);
+    fireEvent.click(screen.getByText("toggle-sidebar"));
+    fireEvent.click(screen.getByText("toggle-toolbar"));
+    fireEvent.click(screen.getByText("toggle-sidebar"));
+    fireEvent.click(screen.getByText("toggle-toolbar"));
+    expect(screen.getByText("Sidebar")).toBeInTheDocument();
+    expect(screen.getByText("Toolbar")).toBeInTheDocument();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+});
+
 // ─── 3d: setColors via hook — component tree reads updated token ──────────────
 
 describe("setColors via hook — :root reflects new colors immediately", () => {
