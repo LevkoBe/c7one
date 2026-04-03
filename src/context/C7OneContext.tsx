@@ -54,6 +54,10 @@ export function C7OneProvider({
   defaultMode = "classic",
   config = {},
 }: C7OneProviderProps) {
+  // Initialize shape/motion/depth from the mode preset first, then let
+  // explicit config values win on top. This keeps state in sync with the DOM.
+  const initialPresetTokens = modes[defaultMode].tokens as Record<string, string>;
+
   const [mode, setModeState] = useState<DesignMode>(defaultMode);
   const [colors, setColorsState] = useState<ThemeTokens>({
     ...dark,
@@ -61,14 +65,20 @@ export function C7OneProvider({
   });
   const [shape, setShapeState] = useState<Required<ShapeConfig>>({
     ...DEFAULT_SHAPE,
+    ...(initialPresetTokens["--radius"] ? { radius: initialPresetTokens["--radius"] } : {}),
+    ...(initialPresetTokens["--border-width"] ? { borderWidth: initialPresetTokens["--border-width"] } : {}),
     ...config.shape,
   });
   const [motion, setMotionState] = useState<Required<MotionConfig>>({
     ...DEFAULT_MOTION,
+    ...(initialPresetTokens["--transition-speed"] ? { transitionSpeed: initialPresetTokens["--transition-speed"] } : {}),
     ...config.motion,
   });
   const [depth, setDepthState] = useState<Required<DepthConfig>>({
     ...DEFAULT_DEPTH,
+    ...(initialPresetTokens["--shadow-intensity"] !== undefined
+      ? { shadowIntensity: parseFloat(initialPresetTokens["--shadow-intensity"]) }
+      : {}),
     ...config.depth,
   });
   const [tokens, setTokensState] = useState<Record<string, string>>(
@@ -97,9 +107,11 @@ export function C7OneProvider({
     injectVar("--shadow-intensity", String(depth.shadowIntensity));
     // Custom tokens
     injectVars(tokens);
-    // Mode (on first run respect the defaultMode preset)
+    // On first run, apply the mode class. Tokens are already handled above via
+    // state (which is initialized from the mode preset in useState). Calling
+    // applyMode() here would overwrite config overrides with the raw preset.
     if (isFirst.current) {
-      applyMode(mode);
+      applyModeClass(modes[mode].className);
       isFirst.current = false;
     }
   }, [colors, shape, motion, depth, tokens]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -108,17 +120,35 @@ export function C7OneProvider({
 
   const setMode = useCallback(
     (next: DesignMode) => {
-      applyMode(next);
-      setModeState(next);
-      // Re-apply explicit overrides on top of the preset
+      const preset = modes[next];
+      const presetTokens = preset.tokens as Record<string, string>;
+
+      // 1. Apply the mode: class + its shape/motion/depth tokens
+      applyModeClass(preset.className);
+      injectVars(presetTokens);
+      // 2. Re-inject colors and custom tokens — these are not part of mode presets
       injectVars(colors as unknown as Record<string, string>);
-      injectVar("--radius", shape.radius);
-      injectVar("--border-width", shape.borderWidth);
-      injectVar("--transition-speed", motion.transitionSpeed);
-      injectVar("--shadow-intensity", String(depth.shadowIntensity));
       injectVars(tokens);
+
+      // 3. Sync React state to the mode's values so sliders/UI stay consistent.
+      //    Without this, subsequent useEffect runs would overwrite the mode tokens
+      //    with stale state values, making mode switches appear invisible.
+      setModeState(next);
+      setShapeState({
+        radius: (presetTokens["--radius"] ?? DEFAULT_SHAPE.radius) as string,
+        borderWidth: (presetTokens["--border-width"] ?? DEFAULT_SHAPE.borderWidth) as string,
+      });
+      setMotionState({
+        transitionSpeed: (presetTokens["--transition-speed"] ?? DEFAULT_MOTION.transitionSpeed) as string,
+      });
+      setDepthState({
+        shadowIntensity:
+          presetTokens["--shadow-intensity"] !== undefined
+            ? parseFloat(presetTokens["--shadow-intensity"])
+            : DEFAULT_DEPTH.shadowIntensity,
+      });
     },
-    [applyMode, colors, shape, motion, depth, tokens],
+    [colors, tokens], // shape/motion/depth removed — no longer read from state here
   );
 
   const setColors = useCallback((next: Partial<ThemeTokens>) => {
