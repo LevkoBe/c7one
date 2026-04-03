@@ -332,3 +332,56 @@ describe("useC7One outside provider", () => {
     console.error = consoleError;
   });
 });
+
+// ─── Mount: all 12 color tokens injected onto :root ───────────────────────────
+
+const COLOR_TOKENS = [
+  "--color-bg-base",
+  "--color-bg-elevated",
+  "--color-bg-overlay",
+  "--color-fg-primary",
+  "--color-fg-muted",
+  "--color-fg-disabled",
+  "--color-accent",
+  "--color-accent-hover",
+  "--color-success",
+  "--color-warning",
+  "--color-error",
+  "--color-border",
+] as const;
+
+describe("C7OneProvider mount — default dark color tokens on :root", () => {
+  for (const token of COLOR_TOKENS) {
+    it(`injects ${token} with the dark theme value`, () => {
+      renderWithProvider();
+      expect(getVar(token)).toBe(dark[token]);
+    });
+  }
+});
+
+describe("C7OneProvider mount — config.colors override", () => {
+  for (const token of COLOR_TOKENS) {
+    it(`config.colors (light) sets ${token} on :root`, () => {
+      renderWithProvider("classic", { colors: light });
+      expect(getVar(token)).toBe(light[token]);
+    });
+  }
+});
+
+describe("C7OneProvider mount — colors survive mode injection", () => {
+  it("all 12 dark tokens remain correct after setMode('neo')", () => {
+    const { result } = renderWithProvider("classic");
+    act(() => result.current.setMode("neo"));
+    for (const token of COLOR_TOKENS) {
+      expect(getVar(token)).toBe(dark[token]);
+    }
+  });
+
+  it("all 12 light tokens remain correct after setMode('minimal')", () => {
+    const { result } = renderWithProvider("classic", { colors: light });
+    act(() => result.current.setMode("minimal"));
+    for (const token of COLOR_TOKENS) {
+      expect(getVar(token)).toBe(light[token]);
+    }
+  });
+});
