@@ -183,7 +183,7 @@ describe("SettingsPanel × all modes — renders all exposed controls", () => {
         wrap(
           mode,
           themes.dark,
-          <SettingsPanel expose={["mode", "colors", "shape.radius"]} />,
+          <SettingsPanel expose={["mode", "colors", "--radius"]} />,
         ),
       );
       // Mode buttons should all be present

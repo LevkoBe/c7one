@@ -538,19 +538,19 @@ describe("SettingsPanel — baseline render inside provider", () => {
     expect(screen.queryByText("Design Mode")).not.toBeInTheDocument();
   });
 
-  it("expose=['shape.radius']: renders Shape section", () => {
-    render(baseline(<SettingsPanel expose={["shape.radius"]} />));
-    expect(screen.getByText("Shape")).toBeInTheDocument();
+  it("expose=['--radius']: renders radius section", () => {
+    render(baseline(<SettingsPanel expose={["--radius"]} />));
+    expect(screen.getByText("radius")).toBeInTheDocument();
   });
 
-  it("expose=['motion.transitionSpeed']: renders Motion section", () => {
-    render(baseline(<SettingsPanel expose={["motion.transitionSpeed"]} />));
-    expect(screen.getByText("Motion")).toBeInTheDocument();
+  it("expose=['--transition-speed']: renders transition section", () => {
+    render(baseline(<SettingsPanel expose={["--transition-speed"]} />));
+    expect(screen.getByText("transition")).toBeInTheDocument();
   });
 
-  it("expose=['depth.shadowIntensity']: renders Depth section", () => {
-    render(baseline(<SettingsPanel expose={["depth.shadowIntensity"]} />));
-    expect(screen.getByText("Depth")).toBeInTheDocument();
+  it("expose=['--shadow-intensity']: renders shadow section", () => {
+    render(baseline(<SettingsPanel expose={["--shadow-intensity"]} />));
+    expect(screen.getByText("shadow")).toBeInTheDocument();
   });
 
   it("renderAppSettings slot is rendered when provided", () => {

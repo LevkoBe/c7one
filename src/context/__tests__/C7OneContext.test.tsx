@@ -385,3 +385,133 @@ describe("C7OneProvider mount — colors survive mode injection", () => {
     }
   });
 });
+
+// ─── getAllTokens — flat token map ────────────────────────────────────────────
+
+describe("getAllTokens — includes all active tokens by CSS var name", () => {
+  it("includes all 12 dark color tokens by default", () => {
+    const { result } = renderWithProvider();
+    const tokens = result.current.getAllTokens();
+    for (const key of COLOR_TOKENS) {
+      expect(tokens[key]).toBe(dark[key]);
+    }
+  });
+
+  it("includes system shape/motion/depth tokens from config", () => {
+    const { result } = renderWithProvider("classic", {
+      shape: { radius: "1rem", borderWidth: "2px" },
+      motion: { transitionSpeed: "300ms" },
+      depth: { shadowIntensity: 0.5 },
+    });
+    const tokens = result.current.getAllTokens();
+    expect(tokens["--radius"]).toBe("1rem");
+    expect(tokens["--border-width"]).toBe("2px");
+    expect(tokens["--transition-speed"]).toBe("300ms");
+    expect(tokens["--shadow-intensity"]).toBe("0.5");
+  });
+
+  it("includes custom tokens from config", () => {
+    const { result } = renderWithProvider("classic", {
+      tokens: { "--sidebar-width": "260px" },
+    });
+    expect(result.current.getAllTokens()["--sidebar-width"]).toBe("260px");
+  });
+
+  it("reflects updated colors after setColors", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setColors(light));
+    expect(result.current.getAllTokens()["--color-bg-base"]).toBe(
+      light["--color-bg-base"],
+    );
+  });
+
+  it("reflects updated radius after setShape", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setShape({ radius: "2rem" }));
+    expect(result.current.getAllTokens()["--radius"]).toBe("2rem");
+  });
+
+  it("reflects custom token added via setToken", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setToken("--my-token", "42px"));
+    expect(result.current.getAllTokens()["--my-token"]).toBe("42px");
+  });
+});
+
+// ─── setTokenValue — routes to the correct typed setter ──────────────────────
+
+describe("setTokenValue — DOM effect", () => {
+  it("--color-accent updates :root", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--color-accent", "#abcdef"));
+    expect(getVar("--color-accent")).toBe("#abcdef");
+  });
+
+  it("--radius updates :root", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--radius", "1.5rem"));
+    expect(getVar("--radius")).toBe("1.5rem");
+  });
+
+  it("--border-width updates :root", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--border-width", "2px"));
+    expect(getVar("--border-width")).toBe("2px");
+  });
+
+  it("--transition-speed updates :root", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--transition-speed", "400ms"));
+    expect(getVar("--transition-speed")).toBe("400ms");
+  });
+
+  it("--shadow-intensity updates :root", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--shadow-intensity", "1.5"));
+    expect(getVar("--shadow-intensity")).toBe("1.5");
+  });
+
+  it("unknown custom token updates :root", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--graph-node-color", "#ff0000"));
+    expect(getVar("--graph-node-color")).toBe("#ff0000");
+  });
+});
+
+describe("setTokenValue — React state", () => {
+  it("--color-accent routes to colors state", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--color-accent", "#abcdef"));
+    expect(result.current.colors["--color-accent"]).toBe("#abcdef");
+  });
+
+  it("--radius routes to shape.radius", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--radius", "1.5rem"));
+    expect(result.current.shape.radius).toBe("1.5rem");
+  });
+
+  it("--border-width routes to shape.borderWidth", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--border-width", "2px"));
+    expect(result.current.shape.borderWidth).toBe("2px");
+  });
+
+  it("--transition-speed routes to motion.transitionSpeed", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--transition-speed", "400ms"));
+    expect(result.current.motion.transitionSpeed).toBe("400ms");
+  });
+
+  it("--shadow-intensity routes to depth.shadowIntensity", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--shadow-intensity", "1.5"));
+    expect(result.current.depth.shadowIntensity).toBe(1.5);
+  });
+
+  it("unknown custom token appears in tokens state", () => {
+    const { result } = renderWithProvider();
+    act(() => result.current.setTokenValue("--graph-node-color", "#ff0000"));
+    expect(result.current.tokens["--graph-node-color"]).toBe("#ff0000");
+  });
+});
