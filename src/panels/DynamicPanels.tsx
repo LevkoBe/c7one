@@ -89,6 +89,10 @@ function DynamicGroup({ node }: { node: GroupNode }) {
   const isH = node.direction === "horizontal";
   const sizes = computeSizes(node.dividerPositions, node.children.length);
 
+  // Collapsed panels are always at the end (invariant maintained by collapse/expand ops).
+  // They take a fixed HEADER_H px each, so we subtract that from containerSize before
+  // computing drag percentages — otherwise moving 1px would shift the divider by more
+  // than 1px of visual space (or less, depending on how many panels are collapsed).
   const startDrag = useCallback(
     (dividerIndex: number) => (e: React.MouseEvent) => {
       e.preventDefault();
@@ -97,11 +101,16 @@ function DynamicGroup({ node }: { node: GroupNode }) {
       const rect = el.getBoundingClientRect();
       const containerSize = isH ? rect.width : rect.height;
       const containerStart = isH ? rect.left : rect.top;
-      if (containerSize === 0) return;
+
+      const nCollapsed = node.children.filter(
+        (c) => c.type === "leaf" && (c as LeafNode).collapsed,
+      ).length;
+      const effectiveSize = containerSize - nCollapsed * HEADER_H;
+      if (effectiveSize <= 0) return;
 
       const onMove = (ev: MouseEvent) => {
         const raw = isH ? ev.clientX : ev.clientY;
-        const pct = ((raw - containerStart) / containerSize) * 100;
+        const pct = ((raw - containerStart) / effectiveSize) * 100;
         moveDivider(node.id, dividerIndex, pct);
       };
       const onUp = () => {
@@ -111,7 +120,7 @@ function DynamicGroup({ node }: { node: GroupNode }) {
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [isH, moveDivider, node.id],
+    [isH, moveDivider, node.id, node.children],
   );
 
   return (
@@ -123,14 +132,16 @@ function DynamicGroup({ node }: { node: GroupNode }) {
       )}
     >
       {node.children.map((child, i) => {
-        const isCollapsed = child.type === "leaf" && (child.collapsed ?? false);
+        const isCollapsed = child.type === "leaf" && ((child as LeafNode).collapsed ?? false);
+        const prevChild = node.children[i - 1];
+        const prevIsCollapsed =
+          prevChild?.type === "leaf" && ((prevChild as LeafNode).collapsed ?? false);
         return (
           <React.Fragment key={child.id}>
-            {i > 0 && (
+            {/* No handle adjacent to collapsed panels — they're fixed-size header strips */}
+            {i > 0 && !prevIsCollapsed && !isCollapsed && (
               <ResizeHandle
                 direction={node.direction}
-                prevChild={node.children[i - 1]}
-                nextChild={child}
                 onStartDrag={startDrag(i - 1)}
               />
             )}
@@ -152,65 +163,15 @@ function DynamicGroup({ node }: { node: GroupNode }) {
 }
 
 // ─── ResizeHandle ─────────────────────────────────────────────────────────────
-//
-// When either adjacent panel is collapsed: shows a restore chevron button
-// instead of a drag target (dragging a handle next to a collapsed panel is
-// confusing and effectively does nothing visible).
-
-interface ResizeHandleProps {
-  direction: SplitDirection;
-  prevChild: PanelTreeNode;
-  nextChild: PanelTreeNode;
-  onStartDrag: (e: React.MouseEvent) => void;
-}
 
 function ResizeHandle({
   direction,
-  prevChild,
-  nextChild,
   onStartDrag,
-}: ResizeHandleProps) {
-  const { expandPanel } = useWindowContext();
+}: {
+  direction: SplitDirection;
+  onStartDrag: (e: React.MouseEvent) => void;
+}) {
   const isH = direction === "horizontal";
-
-  const prevCollapsed = prevChild.type === "leaf" && (prevChild.collapsed ?? false);
-  const nextCollapsed = nextChild.type === "leaf" && (nextChild.collapsed ?? false);
-  const prevLeafId = prevChild.type === "leaf" ? prevChild.id : undefined;
-  const nextLeafId = nextChild.type === "leaf" ? nextChild.id : undefined;
-
-  if (prevCollapsed || nextCollapsed) {
-    return (
-      <div
-        className={cn(
-          "shrink-0 flex items-center justify-center gap-0.5",
-          "bg-bg-elevated border-border",
-          isH ? "flex-col w-5 border-x" : "flex-row h-5 border-y",
-        )}
-      >
-        {prevCollapsed && prevLeafId && (
-          <button
-            onClick={() => expandPanel(prevLeafId)}
-            className={restoreBtnCls}
-            title="Restore panel"
-            aria-label="Restore panel"
-          >
-            {isH ? <ChevronRight /> : <ChevronDown />}
-          </button>
-        )}
-        {nextCollapsed && nextLeafId && (
-          <button
-            onClick={() => expandPanel(nextLeafId)}
-            className={restoreBtnCls}
-            title="Restore panel"
-            aria-label="Restore panel"
-          >
-            {isH ? <ChevronLeft /> : <ChevronUp />}
-          </button>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div
       onMouseDown={onStartDrag}
@@ -418,14 +379,6 @@ function DynamicLeafHeader({
   );
 }
 
-// ─── Restore button ───────────────────────────────────────────────────────────
-
-const restoreBtnCls = cn(
-  "flex items-center justify-center w-4 h-4 rounded-sm",
-  "text-fg-muted hover:text-fg-primary transition-colors cursor-pointer",
-  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
-);
-
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 function PlusIcon() {
@@ -453,34 +406,6 @@ function CloseIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
       <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-function ChevronRight() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M3.5 2L7 5l-3.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function ChevronLeft() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M6.5 2L3 5l3.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function ChevronDown() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M2 3.5L5 7l3-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function ChevronUp() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M2 6.5L5 3l3 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

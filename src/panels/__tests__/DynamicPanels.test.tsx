@@ -134,10 +134,42 @@ describe("useWindowContext — collapsePanel / expandPanel", () => {
 
     act(() => result.current.collapsePanel(leafBId));
 
-    expect((result.current.tree as any).children[1].collapsed).toBe(true);
+    // With 2 children the collapsed leaf stays at index 1 (already last)
+    const collapsed = (result.current.tree as any).children.find(
+      (c: any) => c.id === leafBId,
+    );
+    expect(collapsed.collapsed).toBe(true);
   });
 
-  it("collapsePanel does not affect the sibling leaf", () => {
+  it("collapsePanel moves the collapsed leaf to the end of its group", () => {
+    // Use a 3-panel layout so reordering is visible
+    const layout: LayoutNodeDecl = {
+      type: "group",
+      direction: "horizontal",
+      children: [
+        { type: "leaf", windowId: "win-a", isDefault: true },
+        { type: "leaf", windowId: "win-b" },
+        { type: "leaf", windowId: "win-c" },
+      ],
+    };
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <WindowProvider windows={WINDOWS} layout={layout}>
+        {children}
+      </WindowProvider>
+    );
+    const { result } = renderHook(() => useWindowContext(), { wrapper });
+    const leafBId = (result.current.tree as any).children[1].id as string;
+
+    act(() => result.current.collapsePanel(leafBId));
+
+    const children = (result.current.tree as any).children;
+    // win-b (collapsed) must be last; win-a and win-c are first
+    expect(children[children.length - 1].id).toBe(leafBId);
+    expect(children[0].collapsed).toBeFalsy();
+    expect(children[1].collapsed).toBeFalsy();
+  });
+
+  it("collapsePanel does not affect the non-target sibling", () => {
     const { result } = renderHook(() => useWindowContext(), {
       wrapper: makeWrapper(),
     });
@@ -145,10 +177,13 @@ describe("useWindowContext — collapsePanel / expandPanel", () => {
 
     act(() => result.current.collapsePanel(leafBId));
 
-    expect((result.current.tree as any).children[0].collapsed).toBeFalsy();
+    const leafA = (result.current.tree as any).children.find(
+      (c: any) => c.id !== leafBId,
+    );
+    expect(leafA.collapsed).toBeFalsy();
   });
 
-  it("expandPanel sets collapsed=false on a previously collapsed leaf", () => {
+  it("expandPanel sets collapsed=false and moves leaf back into non-collapsed zone", () => {
     const { result } = renderHook(() => useWindowContext(), {
       wrapper: makeWrapper(),
     });
@@ -157,7 +192,15 @@ describe("useWindowContext — collapsePanel / expandPanel", () => {
     act(() => result.current.collapsePanel(leafBId));
     act(() => result.current.expandPanel(leafBId));
 
-    expect((result.current.tree as any).children[1].collapsed).toBe(false);
+    const leafB = (result.current.tree as any).children.find(
+      (c: any) => c.id === leafBId,
+    );
+    expect(leafB.collapsed).toBe(false);
+    // After expand, no children should be collapsed
+    const anyCollapsed = (result.current.tree as any).children.some(
+      (c: any) => c.collapsed,
+    );
+    expect(anyCollapsed).toBe(false);
   });
 });
 

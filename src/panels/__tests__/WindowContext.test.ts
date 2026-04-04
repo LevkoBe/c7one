@@ -5,6 +5,8 @@ import {
   closeLeafInTree,
   updateLeafInTree,
   moveDividerInTree,
+  collapseLeafInTree,
+  expandLeafInTree,
 } from "../WindowContext";
 import type {
   GroupNode,
@@ -544,5 +546,184 @@ describe("moveDividerInTree — nested groups: only the named group is updated",
     const result = moveDividerInTree(outer, "inner", 0, 70) as GroupNode;
     expect(result.dividerPositions[0]).toBe(50); // outer unchanged
     expect((result.children[0] as GroupNode).dividerPositions[0]).toBe(70);
+  });
+});
+
+// ─── collapseLeafInTree ───────────────────────────────────────────────────────
+
+describe("collapseLeafInTree — moves target to end and renormalizes positions", () => {
+  function threeGroup(): GroupNode {
+    // NC1=30, NC2=40, NC3=30 of proportional space
+    return {
+      type: "group",
+      id: "g1",
+      direction: "horizontal",
+      dividerPositions: [30, 70],
+      children: [
+        { type: "leaf", id: "L1", windowId: "a" },
+        { type: "leaf", id: "L2", windowId: "b" },
+        { type: "leaf", id: "L3", windowId: "c" },
+      ],
+    };
+  }
+
+  it("sets collapsed=true on the target leaf", () => {
+    const result = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    const L2 = result.children.find((c) => c.id === "L2") as LeafNode;
+    expect(L2.collapsed).toBe(true);
+  });
+
+  it("collapsed leaf is moved to the last position", () => {
+    const result = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    expect(result.children[result.children.length - 1].id).toBe("L2");
+  });
+
+  it("non-collapsed leaves retain their relative order", () => {
+    const result = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    expect(result.children[0].id).toBe("L1");
+    expect(result.children[1].id).toBe("L3");
+  });
+
+  it("dividerPositions length stays at children.length - 1", () => {
+    const result = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    expect(result.dividerPositions).toHaveLength(result.children.length - 1);
+  });
+
+  it("boundary position for first collapsed slot is set to 100", () => {
+    // After collapsing L2: [L1, L3, L2_collapsed], positions[1] must be 100
+    const result = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    expect(result.dividerPositions[result.dividerPositions.length - 1]).toBe(100);
+  });
+
+  it("non-collapsed positions are renormalized (L1:L3 ratio was 30:30 → 50:50)", () => {
+    const result = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    // [L1, L3, L2_collapsed] → positions[0] = 50, positions[1] = 100
+    expect(result.dividerPositions[0]).toBeCloseTo(50, 5);
+  });
+
+  it("collapsing the first leaf moves it to the end", () => {
+    const result = collapseLeafInTree(threeGroup(), "L1") as GroupNode;
+    expect(result.children[result.children.length - 1].id).toBe("L1");
+    expect(result.children[0].id).toBe("L2");
+    expect(result.children[1].id).toBe("L3");
+  });
+
+  it("collapsing an already-collapsed leaf is idempotent", () => {
+    const first = collapseLeafInTree(threeGroup(), "L2") as GroupNode;
+    const second = collapseLeafInTree(first, "L2");
+    expect(second).toBe(first); // same reference
+  });
+
+  it("collapsing two leaves places both at the end, preserving their array order", () => {
+    const after1 = collapseLeafInTree(threeGroup(), "L1") as GroupNode;
+    // After collapsing L1: [L2, L3, L1_collapsed]
+    const after2 = collapseLeafInTree(after1, "L3") as GroupNode;
+    // After collapsing L3 from [L2, L3, L1_collapsed]:
+    //   updated = [L2, L3_collapsed, L1_collapsed]
+    //   Collapsed section preserves array order → [L3, L1]
+    expect(after2.children[0].id).toBe("L2");
+    expect(after2.children[1].id).toBe("L3");
+    expect(after2.children[2].id).toBe("L1");
+    // All boundary positions = 100
+    expect(after2.dividerPositions[0]).toBe(100);
+    expect(after2.dividerPositions[1]).toBe(100);
+  });
+});
+
+describe("collapseLeafInTree — root is the target leaf", () => {
+  it("single-leaf root: sets collapsed=true, no reorder needed", () => {
+    const leaf: LeafNode = { type: "leaf", id: "L1", windowId: "a" };
+    const result = collapseLeafInTree(leaf, "L1") as LeafNode;
+    expect(result.collapsed).toBe(true);
+  });
+});
+
+// ─── expandLeafInTree ────────────────────────────────────────────────────────
+
+describe("expandLeafInTree — moves target to non-collapsed zone", () => {
+  // Start: [L1_nc, L2_collapsed, L3_collapsed], positions=[100, 100]
+  function collapsedGroup(): GroupNode {
+    return {
+      type: "group",
+      id: "g1",
+      direction: "horizontal",
+      dividerPositions: [100, 100],
+      children: [
+        { type: "leaf", id: "L1", windowId: "a" },
+        { type: "leaf", id: "L2", windowId: "b", collapsed: true },
+        { type: "leaf", id: "L3", windowId: "c", collapsed: true },
+      ],
+    };
+  }
+
+  it("sets collapsed=false on the target leaf", () => {
+    const result = expandLeafInTree(collapsedGroup(), "L2") as GroupNode;
+    const L2 = result.children.find((c) => c.id === "L2") as LeafNode;
+    expect(L2.collapsed).toBe(false);
+  });
+
+  it("expanded leaf moves into the non-collapsed section", () => {
+    const result = expandLeafInTree(collapsedGroup(), "L2") as GroupNode;
+    // Non-collapsed: L1, L2 — both before collapsed L3
+    expect(result.children[0].id).toBe("L1");
+    expect(result.children[1].id).toBe("L2");
+    expect(result.children[2].id).toBe("L3");
+  });
+
+  it("remaining collapsed leaves stay at the end", () => {
+    const result = expandLeafInTree(collapsedGroup(), "L2") as GroupNode;
+    const last = result.children[result.children.length - 1] as LeafNode;
+    expect(last.id).toBe("L3");
+    expect(last.collapsed).toBe(true);
+  });
+
+  it("last boundary position is still 100 after one expand", () => {
+    const result = expandLeafInTree(collapsedGroup(), "L2") as GroupNode;
+    expect(result.dividerPositions[result.dividerPositions.length - 1]).toBe(100);
+  });
+
+  it("expanding both collapsed leaves leaves no collapsed panels", () => {
+    const after1 = expandLeafInTree(collapsedGroup(), "L2") as GroupNode;
+    const after2 = expandLeafInTree(after1, "L3") as GroupNode;
+    const anyCollapsed = after2.children.some(
+      (c) => c.type === "leaf" && (c as LeafNode).collapsed,
+    );
+    expect(anyCollapsed).toBe(false);
+    expect(after2.dividerPositions).toHaveLength(2); // 3 children → 2 dividers
+    expect(after2.dividerPositions[1]).not.toBe(100); // real divider, not boundary
+  });
+
+  it("expanding an already-expanded leaf is idempotent", () => {
+    const group = collapsedGroup();
+    const result = expandLeafInTree(group, "L1"); // L1 is already expanded
+    expect(result).toBe(group);
+  });
+
+  it("collapse then expand restores the leaf to non-collapsed section", () => {
+    const base = collapseLeafInTree(
+      {
+        type: "group",
+        id: "g1",
+        direction: "horizontal",
+        dividerPositions: [50],
+        children: [
+          { type: "leaf", id: "L1", windowId: "a" },
+          { type: "leaf", id: "L2", windowId: "b" },
+        ],
+      } as GroupNode,
+      "L2",
+    ) as GroupNode;
+
+    // After collapse: [L1, L2_collapsed]
+    expect(base.children[1].id).toBe("L2");
+    expect((base.children[1] as LeafNode).collapsed).toBe(true);
+
+    const restored = expandLeafInTree(base, "L2") as GroupNode;
+    // After expand: [L1, L2] — both non-collapsed
+    expect(restored.children[0].id).toBe("L1");
+    expect(restored.children[1].id).toBe("L2");
+    expect((restored.children[1] as LeafNode).collapsed).toBe(false);
+    expect(restored.dividerPositions).toHaveLength(1);
+    expect(restored.dividerPositions[0]).not.toBe(100);
   });
 });

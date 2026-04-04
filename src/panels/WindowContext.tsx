@@ -115,6 +115,132 @@ export function initTree(decl: LayoutNodeDecl, idGen: () => string): PanelTreeNo
   };
 }
 
+// ─── Size helpers ─────────────────────────────────────────────────────────────
+
+function computeSizes(dividerPositions: number[], n: number): number[] {
+  const sizes: number[] = [];
+  let prev = 0;
+  for (let i = 0; i < n; i++) {
+    const end = i < dividerPositions.length ? dividerPositions[i] : 100;
+    sizes.push(end - prev);
+    prev = end;
+  }
+  return sizes;
+}
+
+// ─── Collapse / expand with reordering ───────────────────────────────────────
+//
+// Invariant maintained by both functions:
+//   • Non-collapsed children come first (stable relative order preserved).
+//   • Collapsed children are always last (stable relative order preserved).
+//   • dividerPositions[0..n_nc-2] cover only non-collapsed panels (normalized 0–100).
+//   • dividerPositions[n_nc-1..] are set to 100 (unused fixed-size slots).
+//
+// This invariant lets the drag handler use effectiveSize = containerSize − n_collapsed×32px
+// without needing to account for where the collapsed panels sit in the layout.
+
+// Returns null when leafId is not a direct child (caller should recurse).
+// Returns root unchanged when the leaf is already in the target state (idempotent).
+// Returns a new GroupNode when the collapse state and child order actually changed.
+function reorderCollapseInGroup(
+  root: GroupNode,
+  leafId: string,
+  newCollapsed: boolean,
+): GroupNode | null {
+  const childIdx = root.children.findIndex(
+    (c) => c.id === leafId && c.type === "leaf",
+  );
+  if (childIdx === -1) return null; // not a direct child — caller recurses
+  const leaf = root.children[childIdx] as LeafNode;
+  if ((leaf.collapsed ?? false) === newCollapsed) return root; // idempotent
+
+  const oldSizes = computeSizes(root.dividerPositions, root.children.length);
+
+  // Update collapsed state on the target leaf
+  const updatedChildren = root.children.map((c, i) =>
+    i === childIdx ? { ...(c as LeafNode), collapsed: newCollapsed } : c,
+  );
+
+  // Partition: groups are always non-collapsed; only leaves can be collapsed
+  const nonCollapsed = updatedChildren.filter(
+    (c) => c.type !== "leaf" || !(c as LeafNode).collapsed,
+  );
+  const collapsed = updatedChildren.filter(
+    (c) => c.type === "leaf" && (c as LeafNode).collapsed,
+  );
+  const reordered = [...nonCollapsed, ...collapsed];
+
+  // Rebuild divider positions for non-collapsed panels.
+  // COLLAPSE: normalize the remaining non-collapsed sizes (the removed panel's
+  //   proportional space is distributed among survivors automatically).
+  // EXPAND: the expanding panel's stored size was a meaningless boundary marker (0),
+  //   so give it an equal share of the total non-collapsed space instead of 0.
+  let ncSizes: number[];
+  if (newCollapsed) {
+    ncSizes = nonCollapsed.map((c) => {
+      const oldIdx = root.children.findIndex((x) => x.id === c.id);
+      return oldSizes[oldIdx];
+    });
+  } else {
+    const existingSizes = nonCollapsed
+      .filter((c) => c.id !== leafId)
+      .map((c) => {
+        const oldIdx = root.children.findIndex((x) => x.id === c.id);
+        return oldSizes[oldIdx];
+      });
+    const totalExisting = existingSizes.reduce((a, b) => a + b, 0);
+    const fairShare = nonCollapsed.length > 1 ? totalExisting / (nonCollapsed.length - 1) : 1;
+    ncSizes = nonCollapsed.map((c) => {
+      if (c.id === leafId) return fairShare;
+      const oldIdx = root.children.findIndex((x) => x.id === c.id);
+      return oldSizes[oldIdx];
+    });
+  }
+  const totalNc = ncSizes.reduce((a, b) => a + b, 0) || 1;
+
+  const newPositions: number[] = [];
+  let acc = 0;
+  for (let i = 0; i < nonCollapsed.length - 1; i++) {
+    acc += (ncSizes[i] / totalNc) * 100;
+    newPositions.push(acc);
+  }
+  for (let i = 0; i < collapsed.length; i++) {
+    newPositions.push(100);
+  }
+
+  return { ...root, children: reordered, dividerPositions: newPositions };
+}
+
+export function collapseLeafInTree(
+  root: PanelTreeNode,
+  leafId: string,
+): PanelTreeNode {
+  if (root.type === "leaf") {
+    if (root.id !== leafId) return root;
+    return (root.collapsed ?? false) ? root : { ...root, collapsed: true };
+  }
+  const updated = reorderCollapseInGroup(root, leafId, true);
+  if (updated !== null) return updated; // found (changed or idempotent) — no recursion
+  const newChildren = root.children.map((c) => collapseLeafInTree(c, leafId));
+  if (newChildren.every((c, i) => c === root.children[i])) return root;
+  return { ...root, children: newChildren };
+}
+
+export function expandLeafInTree(
+  root: PanelTreeNode,
+  leafId: string,
+): PanelTreeNode {
+  if (root.type === "leaf") {
+    if (root.id !== leafId) return root;
+    return (root.collapsed ?? false) ? { ...root, collapsed: false } : root;
+  }
+  const updated = reorderCollapseInGroup(root, leafId, false);
+  if (updated !== null) return updated; // found (changed or idempotent) — no recursion
+  const newChildren = root.children.map((c) => expandLeafInTree(c, leafId));
+  if (newChildren.every((c, i) => c === root.children[i])) return root;
+  return { ...root, children: newChildren };
+}
+
 // ─── Exported for testing ─────────────────────────────────────────────────────
 // splitLeafInTree
 // ─ If the leaf's parent group shares the split direction → add as sibling.
@@ -287,13 +413,13 @@ export function WindowProvider({
 
   const collapsePanel = useCallback(
     (leafId: string) =>
-      setTree((prev) => updateLeafInTree(prev, leafId, { collapsed: true })),
+      setTree((prev) => collapseLeafInTree(prev, leafId)),
     [],
   );
 
   const expandPanel = useCallback(
     (leafId: string) =>
-      setTree((prev) => updateLeafInTree(prev, leafId, { collapsed: false })),
+      setTree((prev) => expandLeafInTree(prev, leafId)),
     [],
   );
 
