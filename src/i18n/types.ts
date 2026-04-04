@@ -17,5 +17,6 @@ export interface LibMessages {
   // Table / DataGrid empty state
   "data.noData": string;
   // DataGrid footer — supports {count} placeholder
+  "data.row": string;
   "data.rows": string;
 }

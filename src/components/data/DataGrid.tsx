@@ -183,7 +183,7 @@ export function DataGrid<T extends object>({
       {/* ── Footer: row count ──────────────────────────────────────── */}
       <div className="px-3 py-1.5 border-t border-border bg-bg-elevated">
         <span className="text-[10px] text-fg-disabled">
-          {t("data.rows", { count: data.length.toLocaleString(locale) })}
+          {t(data.length === 1 ? "data.row" : "data.rows", { count: data.length.toLocaleString(locale) })}
         </span>
       </div>
     </div>

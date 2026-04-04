@@ -12,5 +12,6 @@ export const uk: LibMessages = {
   "settings.openSettings": "Відкрити налаштування",
   // Table / DataGrid
   "data.noData": "Немає даних",
+  "data.row": "{count} рядок",
   "data.rows": "{count} рядків",
 };

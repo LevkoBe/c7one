@@ -106,7 +106,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       ref={ref}
       className={cn(
         "animate-pulse bg-bg-overlay",
-        rounded ? "rounded" : "rounded",
+        rounded ? "rounded-full" : "",
         className,
       )}
       {...props}

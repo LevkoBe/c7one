@@ -164,11 +164,6 @@ describe("Progress — width calculation", () => {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 describe("Skeleton — rounded", () => {
-  it("rounded=false (default): includes rounded class", () => {
-    const { container } = render(<Skeleton />);
-    expect(container.firstElementChild!.className).toContain("rounded");
-  });
-
   it("rounded=false: does NOT include rounded", () => {
     const { container } = render(<Skeleton />);
     expect(container.firstElementChild!.className).not.toContain("rounded");

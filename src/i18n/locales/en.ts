@@ -12,5 +12,6 @@ export const en: LibMessages = {
   "settings.openSettings": "Open settings",
   // Table / DataGrid
   "data.noData": "No data",
+  "data.row": "{count} row",
   "data.rows": "{count} rows",
 };
