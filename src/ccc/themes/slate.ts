@@ -13,4 +13,5 @@ export const slate: ThemeTokens = {
   "--color-warning": "#fbbf24",
   "--color-error": "#f87171",
   "--color-border": "#2d3347",
+  "--color-shadow": "#ffffff",
 };

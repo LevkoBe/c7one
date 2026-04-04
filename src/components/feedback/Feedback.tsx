@@ -155,7 +155,7 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
       className={cn(
         "flex flex-col gap-1 rounded p-4",
         "bg-bg-elevated [border-width:var(--border-width)]",
-        "shadow-xl",
+        "shadow-c7-xl",
         "data-[state=open]:animate-c7-slide-in-from-top",
         "data-[state=closed]:animate-c7-slide-out-to-top",
         toastVariants[variant],

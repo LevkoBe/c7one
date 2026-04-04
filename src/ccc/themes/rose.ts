@@ -13,4 +13,5 @@ export const rose: ThemeTokens = {
   "--color-warning": "#fbbf24",
   "--color-error": "#f43f5e",
   "--color-border": "#3b1f1f",
+  "--color-shadow": "#ffffff",
 };

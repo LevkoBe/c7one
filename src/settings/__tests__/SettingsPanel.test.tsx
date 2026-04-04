@@ -65,10 +65,10 @@ describe("SettingsPanel expose — renders only the requested sections", () => {
     expect(document.querySelector('[title="light"]')).toBeInTheDocument();
   });
 
-  it("expose=['colors']: individual color pickers rendered for all 12 tokens", () => {
+  it("expose=['colors']: individual color pickers rendered for all 13 tokens", () => {
     wrap(<SettingsPanel expose={["colors"]} />);
     const pickers = document.querySelectorAll('input[type="color"]');
-    expect(pickers.length).toBe(12);
+    expect(pickers.length).toBe(13);
   });
 
   it("expose=['--radius']: slider rendered for radius token", () => {
@@ -178,9 +178,9 @@ describe("SettingsPanel — text input fallback for non-numeric, non-color token
 describe("SettingsPanel — no duplication when 'colors' and '--color-*' both exposed", () => {
   it("expose=['colors','--color-accent']: --color-accent not duplicated as extra picker", () => {
     wrap(<SettingsPanel expose={["colors", "--color-accent"]} />);
-    // 'colors' renders 12 pickers; --color-accent is filtered out of token groups
+    // 'colors' renders 13 pickers; --color-accent is filtered out of token groups
     const pickers = document.querySelectorAll('input[type="color"]');
-    expect(pickers.length).toBe(12);
+    expect(pickers.length).toBe(13);
   });
 
   it("expose=['--color-accent'] without 'colors': renders exactly one picker", () => {

@@ -13,4 +13,5 @@ export const light: ThemeTokens = {
   "--color-warning": "#d97706",
   "--color-error": "#dc2626",
   "--color-border": "#e0e0e0",
+  "--color-shadow": "#000000",
 };

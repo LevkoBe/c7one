@@ -42,7 +42,7 @@ export function ModalContent({
           "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
           "w-full max-w-lg",
           "bg-bg-elevated [border-width:var(--border-width)] border-border",
-          "rounded p-6 shadow-xl",
+          "rounded p-6 shadow-c7-xl",
           "transition-all duration-(--transition-speed)",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",

@@ -13,4 +13,5 @@ export const forest: ThemeTokens = {
   "--color-warning": "#ca8a04",
   "--color-error": "#f87171",
   "--color-border": "#1e3b1e",
+  "--color-shadow": "#ffffff",
 };

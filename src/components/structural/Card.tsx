@@ -10,7 +10,7 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const variantClasses: Record<CardVariant, string> = {
   flat: "bg-bg-elevated border-border",
   elevated:
-    "bg-bg-elevated border-border shadow-[0_4px_24px_rgba(0,0,0,calc(0.18*var(--shadow-intensity,1)))]",
+    "bg-bg-elevated border-border shadow-c7-card",
   outlined: "bg-transparent border-border",
   glass: "bg-white/5 border-white/10 backdrop-blur-md",
 };

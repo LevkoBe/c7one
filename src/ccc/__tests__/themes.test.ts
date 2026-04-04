@@ -30,6 +30,7 @@ const REQUIRED_TOKENS: (keyof ThemeTokens)[] = [
   "--color-warning",
   "--color-error",
   "--color-border",
+  "--color-shadow",
 ];
 
 const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
@@ -54,14 +55,14 @@ const allThemes: { name: string; theme: ThemeTokens }[] = [
 
 for (const { name, theme } of allThemes) {
   describe(`${name} theme — data integrity`, () => {
-    it("has all 12 required color tokens", () => {
+    it("has all 13 required color tokens", () => {
       for (const token of REQUIRED_TOKENS) {
         expect(theme, `missing ${token}`).toHaveProperty(token);
       }
     });
 
-    it("has exactly 12 tokens (no extras, no missing)", () => {
-      expect(Object.keys(theme)).toHaveLength(12);
+    it("has exactly 13 tokens (no extras, no missing)", () => {
+      expect(Object.keys(theme)).toHaveLength(13);
     });
 
     it("all token values are non-empty hex color strings", () => {

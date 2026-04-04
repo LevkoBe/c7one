@@ -13,4 +13,5 @@ export const midnight: ThemeTokens = {
   "--color-warning": "#fbbf24",
   "--color-error": "#f87171",
   "--color-border": "#1e3a5f",
+  "--color-shadow": "#ffffff",
 };

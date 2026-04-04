@@ -17,6 +17,7 @@ export interface ThemeTokens {
   "--color-warning": string;
   "--color-error": string;
   "--color-border": string;
+  "--color-shadow": string;
 }
 
 // ─── Shape / Motion / Depth ───────────────────────────────────────────────────

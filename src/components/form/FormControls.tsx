@@ -106,7 +106,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
       >
         <RadixSwitch.Thumb
           className={cn(
-            "pointer-events-none block size-4 rounded-full bg-white shadow-sm",
+            "pointer-events-none block size-4 rounded-full bg-white shadow-c7-sm",
             "transition-transform duration-(--transition-speed)",
             "translate-x-0.5 data-[state=checked]:translate-x-[18px]",
           )}
@@ -151,7 +151,7 @@ export const Slider = React.forwardRef<HTMLSpanElement, SliderProps>(
             className={cn(
               "block size-4 rounded-full bg-accent",
               "border-2 border-bg-base",
-              "shadow-sm transition-transform duration-(--transition-speed)",
+              "shadow-c7-sm transition-transform duration-(--transition-speed)",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
               "hover:scale-110",
               "disabled:pointer-events-none disabled:opacity-50",
@@ -221,7 +221,7 @@ export function Select({
           className={cn(
             "relative z-50 min-w-[8rem] overflow-hidden",
             "bg-bg-elevated [border-width:var(--border-width)] border-border",
-            "rounded shadow-xl",
+            "rounded shadow-c7-xl",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",

@@ -13,4 +13,5 @@ export const dark: ThemeTokens = {
   "--color-warning": "#f59e0b",
   "--color-error": "#ef4444",
   "--color-border": "#2e2e2e",
+  "--color-shadow": "#ffffff",
 };
