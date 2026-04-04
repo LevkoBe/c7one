@@ -31,11 +31,11 @@ The solution isn't just a component library. The cornerstone of C7ONE is **Centr
 
 What you get:
 
-- One provider that owns all visual state — colors, modes, shape, motion, and custom params
+- One provider that owns all visual state — colors, modes, shape, motion, depth, and custom params
 - Every component reads from that provider automatically, no per-component config needed
 - A `SettingsPanel` that's a live management station — developer controls which params are shown, user controls values
 - Per-app typed config for app-specific concerns that don't belong in the shared lib
-- A companion sandbox (c7one-sandbox) for interactive exploration
+- Built-in i18n with `en` and `uk` locales out of the box
 
 **What it is not**: a general-purpose UI library for strangers. This is opinionated, personal, and built for my specific apps first.
 
@@ -52,24 +52,24 @@ Because it's just CSS variables, changing any value is instantaneous, zero re-re
 ```
 C7OneProvider
   └── injects CSS vars onto :root
-        ├── color tokens        (--color-bg-base, --color-accent, ...)
+        ├── color tokens        (--color-bg-base, --color-accent, --color-shadow, ...)
         ├── shape tokens        (--radius, --border-width)
         ├── motion tokens       (--transition-speed)
-        ├── shadow tokens       (--shadow-intensity)
+        ├── depth tokens        (--shadow-intensity)
         └── ...any custom token you inject
 ```
 
-### Base Token Set (v1)
+### Base Token Set
 
 The minimal set shipped by default. All are CSS custom properties:
 
 | Group  | Token                                | Default         | Purpose                        |
 | ------ | ------------------------------------ | --------------- | ------------------------------ |
-| Color  | `--color-bg-base` … `--color-border` | see `index.css` | Full 12-token semantic palette |
+| Color  | `--color-bg-base` … `--color-border` | see `index.css` | Full 13-token semantic palette |
 | Shape  | `--radius`                           | `0.375rem`      | Global border radius scale     |
 | Shape  | `--border-width`                     | `1px`           | Global border thickness        |
 | Motion | `--transition-speed`                 | `200ms`         | Base transition duration       |
-| Depth  | `--shadow-intensity`                 | `1`             | Multiplier for shadow layers   |
+| Depth  | `--shadow-intensity`                 | `0`             | Multiplier for shadow layers   |
 
 This is intentionally minimal. The system is designed so adding a new global token is trivial — add it to the config type, inject it in the provider, reference it in components. No architectural changes required.
 
@@ -114,21 +114,25 @@ C7ONE
 │   └── useC7One()            ← getters + setters for all tokens
 │
 ├── Component Layer
-│   ├── Structural            ← Card, Modal, Header, Footer, Section
+│   ├── Structural            ← Card, Modal, Header, Footer, Section, Scrollable
 │   ├── Textual               ← H1–H6, Body, Code, Badge, Label, Kbd
 │   ├── Form                  ← Button, Input, Select, Checkbox, Toggle, Slider, Textarea
 │   ├── Data                  ← Table, List, Gallery, DataGrid
 │   ├── Navigation            ← Navbar, Sidebar, Tabs, Breadcrumb
 │   ├── Feedback              ← Toast, Alert, Spinner, Progress, Skeleton
-│   └── Visual                ← Divider, Avatar, Scrollbar, Icon, A
+│   └── Visual                ← Divider, Avatar, A, custom scrollbar (CSS)
 │
 ├── Layout Layer (Canvas)
-│   ├── PanelRoot
-│   ├── PanelSplit
-│   └── PanelLeaf
+│   ├── Static panels         ← PanelRoot, PanelSplit, PanelLeaf
+│   └── Dynamic panels        ← DynamicPanelRoot, WindowSelector, useWindowContext
 │
 ├── Settings Layer
-│   └── SettingsPanel         ← live config management station
+│   ├── SettingsPanel         ← live config management station
+│   └── SettingsModalButton   ← convenience trigger that opens SettingsPanel in a modal
+│
+├── i18n Layer
+│   ├── I18nProvider          ← locale state + t() function
+│   └── useI18n()             ← locale, setLocale, t()
 │
 └── AppConfig Layer
     └── AppConfigProvider     ← per-app typed config (generic, not in shared lib)
@@ -136,11 +140,12 @@ C7ONE
 
 ## 5. C7OneProvider
 
-The single provider that wraps every app. Internally it composes sub-contexts (theme, panel visibility, toast, etc.) but exposes one unified surface.
+The single provider that wraps every app. Manages all visual state and injects CSS variables onto `:root`.
 
 ```tsx
 <C7OneProvider
   defaultMode="classic"
+  storageKey="my-app-settings" // persist across sessions via localStorage
   config={{
     colors: darkTheme,
     shape: {
@@ -150,6 +155,9 @@ The single provider that wraps every app. Internally it composes sub-contexts (t
     motion: {
       transitionSpeed: "200ms",
     },
+    depth: {
+      shadowIntensity: 1,
+    },
     tokens: {
       "--custom-sidebar-width": "260px",
     },
@@ -158,6 +166,14 @@ The single provider that wraps every app. Internally it composes sub-contexts (t
   <App />
 </C7OneProvider>
 ```
+
+### Props
+
+| Prop          | Type          | Default     | Description                                                 |
+| ------------- | ------------- | ----------- | ----------------------------------------------------------- |
+| `defaultMode` | `DesignMode`  | `"classic"` | Initial design mode                                         |
+| `config`      | `C7OneConfig` | `{}`        | Initial token values (colors, shape, motion, depth, tokens) |
+| `storageKey`  | `string`      | —           | localStorage key for persisting settings across sessions    |
 
 ### `useC7One()`
 
@@ -173,8 +189,13 @@ const {
   setShape,
   motion,
   setMotion,
+  depth,
+  setDepth,
+  tokens,
   setToken, // set any single CSS var by name
   injectTokens, // inject a whole map of custom tokens
+  getAllTokens, // flat Record<string, string> of every active token
+  setTokenValue, // set any token by CSS var name — routes to correct typed setter
 } = useC7One();
 ```
 
@@ -184,15 +205,16 @@ Every setter updates the CSS variable on `:root` immediately — no re-render ca
 
 Colors are one part of the CCC config — not a separate system. A theme is just a `ThemeTokens` object you pass into `config.colors`.
 
-### Token Roles (12 semantic tokens)
+### Token Roles (13 semantic tokens)
 
-| Group      | Tokens                                                        | Purpose                    |
-| ---------- | ------------------------------------------------------------- | -------------------------- |
-| Background | `--color-bg-base` `--color-bg-elevated` `--color-bg-overlay`  | Page, card, modal surfaces |
-| Foreground | `--color-fg-primary` `--color-fg-muted` `--color-fg-disabled` | Text hierarchy             |
-| Accent     | `--color-accent` `--color-accent-hover`                       | CTAs, links, highlights    |
-| Semantic   | `--color-success` `--color-warning` `--color-error`           | Status                     |
-| Border     | `--color-border`                                              | Dividers, inputs, edges    |
+| Group      | Tokens                                                        | Purpose                                             |
+| ---------- | ------------------------------------------------------------- | --------------------------------------------------- |
+| Background | `--color-bg-base` `--color-bg-elevated` `--color-bg-overlay`  | Page, card, modal surfaces                          |
+| Foreground | `--color-fg-primary` `--color-fg-muted` `--color-fg-disabled` | Text hierarchy                                      |
+| Accent     | `--color-accent` `--color-accent-hover`                       | CTAs, links, highlights                             |
+| Semantic   | `--color-success` `--color-warning` `--color-error`           | Status                                              |
+| Border     | `--color-border`                                              | Dividers, inputs, edges                             |
+| Shadow     | `--color-shadow`                                              | Shadow color (white on dark themes, black on light) |
 
 ### Built-in Themes
 
@@ -223,10 +245,11 @@ C7ONE ships an `index.css` that consuming apps import once. It registers variant
   --color-bg-base: #0f0f0f;
   --color-bg-elevated: #1a1a1a;
   /* ... full token set ... */
+  --color-shadow: #ffffff;
   --radius: 0.375rem;
   --border-width: 1px;
   --transition-speed: 200ms;
-  --shadow-intensity: 1;
+  --shadow-intensity: 0;
 }
 ```
 
@@ -251,6 +274,8 @@ And design mode variants:
 className = "bg-bg-elevated glass:bg-white/10 glass:backdrop-blur-md";
 ```
 
+The CSS also ships themed shadow utilities — `shadow-c7-sm`, `shadow-c7-xl`, `shadow-c7-card` — that adapt to `--color-shadow` so shadows are correct on both light and dark themes.
+
 ## 8. Component Layer
 
 All components are Tailwind-styled wrappers around Radix UI primitives (via shadcn/ui). They use `cn()` (clsx + tailwind-merge) for class merging and accept a `className` prop for per-use overrides.
@@ -267,13 +292,14 @@ All components are Tailwind-styled wrappers around Radix UI primitives (via shad
 
 ### Structural
 
-| Component | Based On     | Notes                                     |
-| --------- | ------------ | ----------------------------------------- |
-| `Card`    | `div`        | variants: flat, elevated, outlined, glass |
-| `Modal`   | Radix Dialog | backdrop, close button, header slot       |
-| `Header`  | `div`        | sticky option, logo + nav slots           |
-| `Footer`  | `div`        | link columns slot                         |
-| `Section` | `div`        | max-width container + standard padding    |
+| Component    | Based On     | Notes                                                         |
+| ------------ | ------------ | ------------------------------------------------------------- |
+| `Card`       | `div`        | variants: flat, elevated, outlined, glass                     |
+| `Modal`      | Radix Dialog | backdrop, close button, `Modal.Trigger` / `Modal.Content` API |
+| `Header`     | `div`        | sticky option, logo + nav slots                               |
+| `Footer`     | `div`        | link columns slot                                             |
+| `Section`    | `div`        | max-width container + standard padding                        |
+| `Scrollable` | `div`        | `axis` (x/y/both) + `overflow` (auto/always/hidden) props     |
 
 ### Textual
 
@@ -281,49 +307,93 @@ All components are Tailwind-styled wrappers around Radix UI primitives (via shad
 
 ### Form
 
-`Button`, `Input`, `Select`, `Checkbox`, `Toggle`, `Slider`, `Textarea` — all Radix-backed
+`Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `Toggle`, `Slider` — all Radix-backed
 
 ### Data
 
-`Table` (sortable, pagination slot), `List`, `Gallery` (responsive grid), `DataGrid` (virtualized rows option)
+`Table` (sortable, `Pagination` component), `List` + `ListItem`, `Gallery` + `GalleryCard` (responsive grid), `DataGrid` (column definitions, row data)
 
 ### Feedback
 
-`Toast`, `Alert`, `Spinner`, `Progress`, `Skeleton`
+`Toast`, `ToastProvider`, `ToastViewport`, `ToastClose`, `Alert`, `Spinner`, `Progress`, `Skeleton`
 
 ### Visual
 
 `Divider` (H/V, optional label), `Avatar` (image + fallback initials), `A` (accent-matched link), custom scrollbar (global, via base layer CSS)
 
+### Navigation
+
+`Navbar`, `Sidebar` (with `SidebarGroup` / `NavItem`), `Tabs` + `TabsList` + `TabsTrigger` + `TabsContent`, `Breadcrumb`
+
 ## 9. SettingsPanel
 
-The `SettingsPanel` is the live configuration management station. It reads all current values from `useC7One()` and renders controls for them. The developer controls which settings are exposed to the user via props — everything else is still accessible programmatically but hidden from the UI.
+The `SettingsPanel` is the live configuration management station. It reads all current token values from `useC7One()` and renders controls for them. The developer controls which settings are exposed to the user via the `expose` prop.
+
+Controls are auto-inferred from the token name and value: color tokens get a color picker, numeric tokens (rem, px, ms, bare numbers) get a slider, and everything else gets a text input.
+
+The panel also provides **Save / Load** buttons that export/import the full config as a JSON file.
 
 ```tsx
 <SettingsPanel
-  expose={["colors", "mode", "shape.radius", "motion.transitionSpeed"]}
+  expose={[
+    "mode",
+    "colors",
+    "--radius",
+    "--border-width",
+    "--transition-speed",
+  ]}
+  presets={[
+    {
+      label: "Dark neo",
+      icon: <MoonIcon />,
+      apply: (ctx) => {
+        ctx.setMode("neo");
+        ctx.setColors(dark);
+      },
+    },
+  ]}
   renderAppSettings={() => <MyAppSpecificSettings />}
 />
 ```
 
-How it works:
+### Props
 
-- Reads all current token values from the provider on mount
-- Renders appropriate controls for each exposed key (color swatches, sliders, mode toggles, etc.)
-- User changes call the relevant setter in `useC7One()` — CSS var updates instantly
-- `renderAppSettings` slots in arbitrary app-specific controls below the generic ones
+| Prop                | Type               | Description                                                                            |
+| ------------------- | ------------------ | -------------------------------------------------------------------------------------- |
+| `expose`            | `SettingKey[]`     | Which controls to show. Default: `["mode", "colors"]`                                  |
+| `presets`           | `SettingsPreset[]` | One-click preset buttons. Each has `label`, optional `icon`, and `apply(ctx)` callback |
+| `renderAppSettings` | `() => ReactNode`  | Slot for app-specific controls rendered below the generic ones                         |
+| `className`         | `string`           | Extra classes on the root element                                                      |
 
-The `expose` array accepts dot-path strings for any registered token, including custom ones injected by your app:
+### `SettingKey` type
 
-```tsx
-expose={['colors', 'tokens.--graph-node-color']}
+```ts
+type SettingKey = "mode" | "colors" | `--${string}`;
 ```
 
-The panel is itself a C7ONE component, fully styled by the token system, droppable into a `PanelLeaf` or rendered anywhere.
+- `"mode"` — renders the four design mode buttons
+- `"colors"` — renders theme swatches + individual color pickers for all 13 color tokens
+- `"--radius"`, `"--border-width"`, `"--transition-speed"`, `"--shadow-intensity"` — built-in shape/motion/depth sliders
+- Any custom token you've injected, e.g. `"--graph-node-color"` — renders the appropriate inferred control
 
-## 10. Canvas — Panel / Layout System
+```tsx
+// Expose custom tokens alongside the built-ins
+expose={["colors", "--graph-node-color"]}
+```
 
-The **Canvas** principle made concrete. Inspired by VSCode's editor layout, the layout is a binary tree of splits and content slots.
+### `SettingsModalButton`
+
+A convenience component — renders a small settings icon button that opens the `SettingsPanel` in a modal. Accepts all `SettingsPanelProps` plus an optional `label` (accessible button label) and `buttonClassName`.
+
+```tsx
+<SettingsModalButton expose={["mode", "colors"]} label="Open settings" />
+```
+
+The panel and button are themselves C7ONE components, fully styled by the token system, droppable into a `PanelLeaf` or rendered anywhere.
+
+## 10. Canvas — Static Panel System
+
+The **Canvas** principle made concrete. Inspired by VSCode's editor layout, the static layout is a binary tree of splits and content slots — ideal for fixed app layouts declared at design time.
 
 ```
 PanelRoot
@@ -352,11 +422,140 @@ PanelRoot
 </PanelRoot>
 ```
 
-Features: drag-to-resize handles, min/max size per leaf, optional persisted ratios via localStorage, collapses to stacked on mobile. Backed by `react-resizable-panels`.
+Features: drag-to-resize handles, optional persisted ratios via `storageKey` on `PanelSplit`. Backed by `react-resizable-panels`.
 
-`usePanelVisibility(id)` lets you programmatically show/hide any leaf.
+`usePanelVisibility(id)` lets you programmatically show/hide/toggle any leaf:
 
-## 11. AppConfig Layer
+```tsx
+const { visible, show, hide, toggle } = usePanelVisibility("sidebar");
+```
+
+## 11. Canvas — Dynamic Panel System
+
+For app shells where users control the layout at runtime (add panels, split them, close them, assign content) — like a dashboard or multi-document editor.
+
+```tsx
+<DynamicPanelRoot
+  windows={[
+    { id: "editor", title: "Editor", icon: <CodeIcon />, component: MyEditor },
+    {
+      id: "preview",
+      title: "Preview",
+      icon: <EyeIcon />,
+      component: MyPreview,
+    },
+  ]}
+  layout={{ type: "leaf", windowId: "editor", isDefault: true }}
+  storageKey="my-app-layout"
+/>
+```
+
+The layout is an N-ary tree of `GroupNode` (splits) and `LeafNode` (content slots). Each leaf can hold one window or be empty (showing a `WindowSelector` picker).
+
+### Layout declaration
+
+```tsx
+// Two panels side by side, 78/22 split
+const layout: LayoutNodeDecl = {
+  type: "group",
+  direction: "horizontal",
+  sizes: [78, 22],
+  children: [
+    { type: "leaf", windowId: "editor", isDefault: true },
+    { type: "leaf", windowId: null },
+  ],
+};
+```
+
+### User operations
+
+- **Split** — hover near any edge of a panel → click the `+` button to split horizontally or vertically
+- **Close** — click `×` in the panel header; the sibling absorbs the space
+- **Minimize / Expand** — collapse a panel to its header strip; expand restores it
+- **Assign window** — empty panels show `WindowSelector`, a grid of available windows to pick from
+
+### `useWindowContext()`
+
+Access the panel tree and all operations from within a `DynamicPanelRoot`:
+
+```tsx
+const {
+  windows,
+  tree,
+  splitPanel,
+  closePanel,
+  collapsePanel,
+  expandPanel,
+  assignWindow,
+  moveDivider,
+} = useWindowContext();
+```
+
+### `DynamicPanelRootProps`
+
+| Prop         | Type             | Description                                                          |
+| ------------ | ---------------- | -------------------------------------------------------------------- |
+| `windows`    | `WindowDef[]`    | Registry of all available window components                          |
+| `layout`     | `LayoutNodeDecl` | Initial panel tree (ignored if `storageKey` restores a saved layout) |
+| `storageKey` | `string`         | localStorage key for persisting the layout                           |
+| `className`  | `string`         | Extra classes on the root element                                    |
+
+The dynamic system uses plain CSS flex with custom drag handles — no `react-resizable-panels` dependency. Moving a divider only affects the two adjacent panels; all others are unaffected.
+
+## 12. i18n
+
+C7ONE ships a lightweight i18n layer used internally by `SettingsPanel` and `DataGrid`. You can extend it with your own app strings using the same `t()` hook.
+
+### Setup
+
+```tsx
+<I18nProvider defaultLocale="uk" storageKey="my-app-locale">
+  <App />
+</I18nProvider>
+```
+
+`I18nProvider` is optional — `useI18n()` falls back to English when no provider is mounted.
+
+### `useI18n()`
+
+```tsx
+const { locale, setLocale, t } = useI18n();
+
+t("settings.title"); // "Settings" / "Налаштування"
+t("data.rows", { count: 42 }); // "42 rows" / "42 рядків"
+t("nav.home"); // your own key
+```
+
+### App-specific messages
+
+Pass your own per-locale string maps via `messages`:
+
+```tsx
+<I18nProvider
+  defaultLocale="en"
+  messages={{
+    en: { "nav.home": "Home", "nav.about": "About" },
+    uk: { "nav.home": "Головна", "nav.about": "Про нас" },
+  }}
+>
+```
+
+### Built-in locales
+
+| ID   | Language  |
+| ---- | --------- |
+| `en` | English   |
+| `uk` | Ukrainian |
+
+### `I18nProviderProps`
+
+| Prop            | Type                                              | Default | Description                                        |
+| --------------- | ------------------------------------------------- | ------- | -------------------------------------------------- |
+| `defaultLocale` | `Locale`                                          | `"en"`  | Initial locale                                     |
+| `messages`      | `Partial<Record<Locale, Record<string, string>>>` | `{}`    | App-specific strings merged on top of lib messages |
+| `storageKey`    | `string`                                          | —       | localStorage key for persisting the locale         |
+
+## 13. AppConfig Layer
 
 Per-app config for things that have nothing to do with the shared library — like node colors in DigraVinci or category settings in SkillTracker. Fully typed via generics, completely isolated from C7ONE's own config.
 
@@ -376,45 +575,54 @@ const config = useAppConfig<DigraVinciConfig>();
 
 App-specific logic never bleeds into the shared library.
 
-## 13. File Structure
+## 14. File Structure
 
 ```
 c7one/
 ├── src/
 │   ├── ccc/
-│   │   ├── types.ts               ← ThemeTokens, ShapeConfig, MotionConfig, DesignMode
-│   │   ├── themes/                ← dark.ts, light.ts, midnight.ts, ...
+│   │   ├── types.ts               ← ThemeTokens, ShapeConfig, MotionConfig, DepthConfig, DesignMode
+│   │   ├── themes/                ← dark.ts, light.ts, midnight.ts, forest.ts, rose.ts, slate.ts
 │   │   ├── modes/                 ← classic.ts, neo.ts, glass.ts, minimal.ts
 │   │   └── inject.ts              ← injects CSS vars onto :root
 │   │
 │   ├── context/
-│   │   ├── C7OneContext.tsx        ← unified provider (composes sub-contexts)
-│   │   ├── PanelContext.tsx
-│   │   └── AppConfigContext.tsx
+│   │   ├── C7OneContext.tsx        ← unified provider + useC7One()
+│   │   ├── PanelContext.tsx        ← PanelVisibilityProvider + usePanelVisibility()
+│   │   └── AppConfigContext.tsx    ← AppConfigProvider + useAppConfig()
 │   │
 │   ├── components/
-│   │   ├── structural/
-│   │   ├── textual/
-│   │   ├── form/
-│   │   ├── data/
-│   │   ├── feedback/
-│   │   ├── visual/
-│   │   └── navigation/
+│   │   ├── structural/            ← Card, Modal, Header, Footer, Section, Scrollable
+│   │   ├── textual/               ← H1–H6, Body, Code, Badge, Label, Kbd
+│   │   ├── form/                  ← Button, Input, Textarea, Select, Checkbox, Toggle, Slider
+│   │   ├── data/                  ← Table, List, Gallery, DataGrid
+│   │   ├── feedback/              ← Toast, Alert, Spinner, Progress, Skeleton
+│   │   ├── visual/                ← Divider, Avatar, A
+│   │   └── navigation/            ← Navbar, Sidebar, Tabs, Breadcrumb
 │   │
 │   ├── panels/
-│   │   ├── PanelRoot.tsx
-│   │   ├── PanelSplit.tsx
-│   │   └── PanelLeaf.tsx
+│   │   ├── Panels.tsx             ← PanelRoot, PanelSplit, PanelLeaf (static)
+│   │   ├── DynamicPanels.tsx      ← DynamicPanelRoot (dynamic, user-operated)
+│   │   ├── WindowContext.tsx      ← WindowProvider, useWindowContext, tree helpers
+│   │   └── WindowSelector.tsx     ← picker UI shown in empty dynamic panel slots
 │   │
 │   ├── settings/
-│   │   └── SettingsPanel.tsx
+│   │   └── SettingsPanel.tsx      ← SettingsPanel, SettingsModalButton
 │   │
-│   └── utils/
-│       ├── cn.ts
-│       └── hooks.ts               ← useC7One, usePanelVisibility, useAppConfig
+│   ├── i18n/
+│   │   ├── I18nContext.tsx        ← I18nProvider, useI18n()
+│   │   ├── types.ts               ← Locale, LibMessages
+│   │   └── locales/
+│   │       ├── en.ts
+│   │       └── uk.ts
+│   │
+│   ├── utils/
+│   │   └── cn.ts                  ← cn() (clsx + tailwind-merge)
+│   │
+│   └── index.ts                   ← public exports
 │
 ├── styles/
-│   └── index.css                  ← @theme tokens, @variant declarations, base layer
+│   └── index.css                  ← @theme tokens, @variant declarations, base layer, shadow utilities
 │
 ├── index.ts
 ├── tsup.config.ts
@@ -422,9 +630,9 @@ c7one/
 └── package.json
 ```
 
-## 14. c7one-sandbox
+## 15. c7one-sandbox
 
-A companion app hosted on GitHub Pages — the interactive showcase and component explorer for C7ONE.
+A companion app — the interactive showcase and component explorer for C7ONE.
 
 **Why a separate project, not a built-in route**: keeping it separate means C7ONE the library has zero demo code in its bundle, while the sandbox can update independently and always reflect the latest published package. It's also the best discoverability story — a public URL anyone can visit without installing anything.
 
