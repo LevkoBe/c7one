@@ -181,6 +181,24 @@ export type {
 export { PanelRoot, PanelSplit, PanelLeaf } from "./panels";
 export type { PanelRootProps, PanelSplitProps, PanelLeafProps } from "./panels";
 
+// ─── Dynamic Panel System ─────────────────────────────────────────────────────
+export { DynamicPanelRoot } from "./panels";
+export type { DynamicPanelRootProps } from "./panels";
+export { WindowSelector } from "./panels";
+export type { WindowSelectorProps } from "./panels";
+export { useWindowContext } from "./panels";
+export type {
+  WindowDef,
+  PanelTreeNode,
+  GroupNode,
+  LeafNode,
+  SplitDirection,
+  LayoutNodeDecl,
+  LayoutGroupDecl,
+  LayoutLeafDecl,
+  WindowContextValue,
+} from "./panels";
+
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 export { SettingsPanel } from "./settings/SettingsPanel";
 export type { SettingsPanelProps, SettingKey } from "./settings/SettingsPanel";
