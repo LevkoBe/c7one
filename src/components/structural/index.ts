@@ -16,3 +16,6 @@ export type { DrawerProps, DrawerSide } from "./Drawer";
 
 export { Header, Footer, Section } from "./Layout";
 export type { HeaderProps, SectionProps } from "./Layout";
+
+export { Scrollable } from "./Scrollable";
+export type { ScrollableProps, ScrollAxis, ScrollBehavior } from "./Scrollable";
