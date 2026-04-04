@@ -94,7 +94,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         ref={ref}
         id={id}
         className={cn(
-          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full items-center",
+          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded items-center",
           "[border-width:var(--border-width)] border-transparent",
           "bg-bg-overlay transition-colors duration-(--transition-speed)",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
@@ -106,7 +106,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
       >
         <RadixSwitch.Thumb
           className={cn(
-            "pointer-events-none block size-4 rounded-full bg-white shadow-c7-sm",
+            "pointer-events-none block size-4 rounded bg-white shadow-c7-sm",
             "transition-transform duration-(--transition-speed)",
             "translate-x-0.5 data-[state=checked]:translate-x-[18px]",
           )}
@@ -142,14 +142,14 @@ export const Slider = React.forwardRef<HTMLSpanElement, SliderProps>(
         )}
         {...props}
       >
-        <RadixSlider.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-bg-overlay">
+        <RadixSlider.Track className="relative h-1.5 w-full grow overflow-hidden rounded bg-bg-overlay">
           <RadixSlider.Range className="absolute h-full bg-accent transition-all duration-(--transition-speed)" />
         </RadixSlider.Track>
         {(props.value ?? props.defaultValue ?? [0]).map((_, i) => (
           <RadixSlider.Thumb
             key={i}
             className={cn(
-              "block size-4 rounded-full bg-accent",
+              "block size-4 rounded bg-accent",
               "border-2 border-bg-base",
               "shadow-c7-sm transition-transform duration-(--transition-speed)",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",

@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { useC7One } from "../context/C7OneContext";
-import type { DesignMode, ThemeTokens } from "../ccc/types";
+import type { C7OneContextValue, DesignMode, ThemeTokens } from "../ccc/types";
 import * as themes from "../ccc/themes";
 import { cn } from "../utils/cn";
 import { Card } from "../components/structural/Card";
@@ -13,8 +13,15 @@ import { Button } from "../components/form/Button";
 /** 'mode' and 'colors' are special preset controls; any '--*' is a CSS var name. */
 export type SettingKey = "mode" | "colors" | `--${string}`;
 
+export interface SettingsPreset {
+  label: string;
+  icon?: React.ReactNode;
+  apply: (ctx: C7OneContextValue) => void;
+}
+
 export interface SettingsPanelProps {
   expose?: SettingKey[];
+  presets?: SettingsPreset[];
   renderAppSettings?: () => React.ReactNode;
   className?: string;
 }
@@ -173,6 +180,7 @@ function SettingsSection({
 
 export function SettingsPanel({
   expose,
+  presets,
   renderAppSettings,
   className,
 }: SettingsPanelProps) {
@@ -255,6 +263,29 @@ export function SettingsPanel({
           />
         </div>
       </div>
+
+      {/* ── Presets ──────────────────────────────────────────────────── */}
+      {presets && presets.length > 0 && (
+        <SettingsSection title="Presets">
+          <div className="flex flex-wrap gap-1.5">
+            {presets.map((preset, i) => (
+              <Button
+                key={i}
+                size="sm"
+                variant="secondary"
+                onClick={() => preset.apply(ctx)}
+                title={preset.label}
+                className="flex items-center gap-1.5"
+              >
+                {preset.icon && (
+                  <span className="flex items-center">{preset.icon}</span>
+                )}
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+        </SettingsSection>
+      )}
 
       {/* ── Design Mode ──────────────────────────────────────────────── */}
       {showMode && (

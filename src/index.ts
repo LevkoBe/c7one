@@ -196,4 +196,4 @@ export type {
 
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 export { SettingsPanel } from "./settings/SettingsPanel";
-export type { SettingsPanelProps, SettingKey } from "./settings/SettingsPanel";
+export type { SettingsPanelProps, SettingKey, SettingsPreset } from "./settings/SettingsPanel";

@@ -75,7 +75,7 @@ export type LayoutNodeDecl = LayoutGroupDecl | LayoutLeafDecl;
 export interface WindowContextValue {
   windows: WindowDef[];
   tree: PanelTreeNode;
-  splitPanel: (leafId: string, direction: SplitDirection, position: "before" | "after") => void;
+  splitPanel: (leafId: string, direction: SplitDirection, position: "before" | "after", newPanelSizePct?: number) => void;
   closePanel: (leafId: string) => void;
   collapsePanel: (leafId: string) => void;
   expandPanel: (leafId: string) => void;
@@ -260,15 +260,25 @@ export function splitLeafInTree(
   direction: SplitDirection,
   position: "before" | "after",
   idGen: () => string,
+  /**
+   * Percentage of the leaf's current slot that the new (empty) panel should
+   * occupy. Clamped to [5, 95]. Defaults to 50 (equal split).
+   */
+  newPanelSizePct?: number,
 ): PanelTreeNode {
+  const p = newPanelSizePct !== undefined ? Math.min(Math.max(newPanelSizePct, 5), 95) : 50;
+
   if (root.type === "leaf") {
     if (root.id !== leafId) return root;
     const newLeaf: LeafNode = { type: "leaf", id: idGen(), windowId: null };
+    // position "before": [newLeaf, root] — newLeaf takes p%, root takes (100-p)%
+    // position "after":  [root, newLeaf] — root takes (100-p)%, newLeaf takes p%
+    const divPos = position === "before" ? p : 100 - p;
     return {
       type: "group",
       id: idGen(),
       direction,
-      dividerPositions: [50],
+      dividerPositions: [divPos],
       children: position === "before" ? [newLeaf, root] : [root, newLeaf],
     };
   }
@@ -289,18 +299,27 @@ export function splitLeafInTree(
       const positions = [...root.dividerPositions];
       const leafStart = childIdx > 0 ? positions[childIdx - 1] : 0;
       const leafEnd = childIdx < positions.length ? positions[childIdx] : 100;
-      const midpoint = (leafStart + leafEnd) / 2;
-      // New divider goes between the two halves of the original leaf's slot
-      positions.splice(childIdx, 0, midpoint);
+      const leafSize = leafEnd - leafStart;
+      // New panel takes p% of the leaf's slot; the existing leaf keeps the rest.
+      // "before": newLeaf occupies [leafStart, splitPoint], leaf [splitPoint, leafEnd]
+      // "after":  leaf occupies [leafStart, splitPoint], newLeaf [splitPoint, leafEnd]
+      const splitPoint =
+        position === "before"
+          ? leafStart + leafSize * (p / 100)
+          : leafEnd - leafSize * (p / 100);
+      positions.splice(childIdx, 0, splitPoint);
 
       return { ...root, children: newChildren, dividerPositions: positions };
     } else {
-      // Wrap the leaf in a new perpendicular group
+      // Wrap the leaf in a new perpendicular group.
+      // position "before": [newLeaf, leaf] — newLeaf takes p%, leaf takes (100-p)%
+      // position "after":  [leaf, newLeaf] — leaf takes (100-p)%, newLeaf takes p%
+      const divPos = position === "before" ? p : 100 - p;
       const newGroup: GroupNode = {
         type: "group",
         id: idGen(),
         direction,
-        dividerPositions: [50],
+        dividerPositions: [divPos],
         children: position === "before" ? [newLeaf, leaf] : [leaf, newLeaf],
       };
       const newChildren = [...root.children];
@@ -421,9 +440,9 @@ export function WindowProvider({
   });
 
   const splitPanel = useCallback(
-    (leafId: string, direction: SplitDirection, position: "before" | "after") =>
+    (leafId: string, direction: SplitDirection, position: "before" | "after", newPanelSizePct?: number) =>
       setTree((prev) =>
-        splitLeafInTree(prev, leafId, direction, position, idGenRef.current),
+        splitLeafInTree(prev, leafId, direction, position, idGenRef.current, newPanelSizePct),
       ),
     [],
   );

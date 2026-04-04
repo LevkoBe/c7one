@@ -94,9 +94,9 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
                 </svg>
               ) : (
                 <>
-                  <span className="block w-5 h-0.5 bg-current rounded-full" />
-                  <span className="block w-5 h-0.5 bg-current rounded-full" />
-                  <span className="block w-5 h-0.5 bg-current rounded-full" />
+                  <span className="block w-5 h-0.5 bg-current rounded" />
+                  <span className="block w-5 h-0.5 bg-current rounded" />
+                  <span className="block w-5 h-0.5 bg-current rounded" />
                 </>
               )}
             </button>
