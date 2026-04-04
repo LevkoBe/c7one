@@ -321,14 +321,16 @@ function LeafContent({ node }: { node: LeafNode }) {
         onExpand={() => expandPanel(node.id)}
       />
 
-      {/* Content area — clipped by PanelSlot's overflow-hidden during collapse animation */}
-      <div className="flex-1 min-h-0 overflow-auto">
-        {windowDef ? (
-          <windowDef.component />
-        ) : (
-          <WindowSelector leafId={node.id} />
-        )}
-      </div>
+      {/* Content area — not rendered when collapsed */}
+      {!node.collapsed && (
+        <div className="flex-1 min-h-0 overflow-auto">
+          {windowDef ? (
+            <windowDef.component />
+          ) : (
+            <WindowSelector leafId={node.id} />
+          )}
+        </div>
+      )}
 
       {/* Single [+] button at the detected edge — no blocking overlay */}
       {hoveredEdge && (
