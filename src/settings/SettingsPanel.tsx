@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useC7One } from "../context/C7OneContext";
 import type { DesignMode, ThemeTokens } from "../ccc/types";
 import * as themes from "../ccc/themes";
@@ -57,6 +57,20 @@ function inferSlider(value: string): SliderDef {
 function inferGroup(name: string): string {
   const m = /^--([a-z]+)/.exec(name);
   return m ? m[1] : "other";
+}
+
+// ─── File I/O helpers ─────────────────────────────────────────────────────────
+
+function downloadJson(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Theme list — derived from the themes index, never hardcoded ──────────────
@@ -164,6 +178,42 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const ctx = useC7One();
   const allTokens = ctx.getAllTokens();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = () => {
+    downloadJson(
+      {
+        mode: ctx.mode,
+        colors: ctx.colors,
+        shape: ctx.shape,
+        motion: ctx.motion,
+        depth: ctx.depth,
+        tokens: ctx.tokens,
+      },
+      "c7one-settings.json",
+    );
+  };
+
+  const handleLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        if (data.mode)   ctx.setMode(data.mode);
+        if (data.colors) ctx.setColors(data.colors);
+        if (data.shape)  ctx.setShape(data.shape);
+        if (data.motion) ctx.setMotion(data.motion);
+        if (data.depth)  ctx.setDepth(data.depth);
+        if (data.tokens) ctx.injectTokens(data.tokens);
+      } catch {
+        // malformed JSON — ignore
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  };
 
   // Default: mode + color swatches only. Devs add more via expose.
   const keys: SettingKey[] = expose ?? ["mode", "colors"];
@@ -187,7 +237,24 @@ export function SettingsPanel({
 
   return (
     <div>
-      <p className="text-sm font-semibold text-fg-primary mb-5">Settings</p>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm font-semibold text-fg-primary">Settings</p>
+        <div className="flex gap-1.5">
+          <Button size="sm" variant="secondary" onClick={handleSave}>
+            Save
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            Load
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleLoad}
+          />
+        </div>
+      </div>
 
       {/* ── Design Mode ──────────────────────────────────────────────── */}
       {showMode && (
