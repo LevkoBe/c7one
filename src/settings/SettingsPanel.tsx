@@ -3,7 +3,7 @@ import { useC7One } from "../context/C7OneContext";
 import type { C7OneContextValue, DesignMode, ThemeTokens } from "../ccc/types";
 import * as themes from "../ccc/themes";
 import { cn } from "../utils/cn";
-import { Card } from "../components/structural/Card";
+import { Modal } from "../components/structural/Modal";
 import { Label } from "../components/textual/Typography";
 import { Slider } from "../components/form/FormControls";
 import { Button } from "../components/form/Button";
@@ -209,11 +209,11 @@ export function SettingsPanel({
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        if (data.mode)   ctx.setMode(data.mode);
+        if (data.mode) ctx.setMode(data.mode);
         if (data.colors) ctx.setColors(data.colors);
-        if (data.shape)  ctx.setShape(data.shape);
+        if (data.shape) ctx.setShape(data.shape);
         if (data.motion) ctx.setMotion(data.motion);
-        if (data.depth)  ctx.setDepth(data.depth);
+        if (data.depth) ctx.setDepth(data.depth);
         if (data.tokens) ctx.injectTokens(data.tokens);
       } catch {
         // malformed JSON — ignore
@@ -251,7 +251,11 @@ export function SettingsPanel({
           <Button size="sm" variant="secondary" onClick={handleSave}>
             Save
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => fileInputRef.current?.click()}
+          >
             Load
           </Button>
           <input
@@ -275,12 +279,10 @@ export function SettingsPanel({
                 variant="secondary"
                 onClick={() => preset.apply(ctx)}
                 title={preset.label}
-                className="flex items-center gap-1.5"
+                aria-label={preset.label}
+                className="flex items-center justify-center px-0 w-7 h-7"
               >
-                {preset.icon && (
-                  <span className="flex items-center">{preset.icon}</span>
-                )}
-                {preset.label}
+                {preset.icon}
               </Button>
             ))}
           </div>
@@ -367,5 +369,65 @@ export function SettingsPanel({
         </SettingsSection>
       )}
     </div>
+  );
+}
+
+// ─── SettingsModalButton ──────────────────────────────────────────────────────
+
+export interface SettingsModalButtonProps extends SettingsPanelProps {
+  /** Accessible label for the trigger button. Default: "Open settings" */
+  label?: string;
+  buttonClassName?: string;
+}
+
+function GearIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.3" />
+      <path
+        d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.75 2.75l1.06 1.06M10.19 10.19l1.06 1.06M2.75 11.25l1.06-1.06M10.19 3.81l1.06-1.06"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function SettingsModalButton({
+  label = "Open settings",
+  buttonClassName,
+  ...panelProps
+}: SettingsModalButtonProps) {
+  return (
+    <Modal>
+      <Modal.Trigger asChild>
+        <button
+          aria-label={label}
+          title={label}
+          className={cn(
+            "flex items-center justify-center w-7 h-7 rounded-sm",
+            "text-fg-muted hover:text-fg-primary hover:bg-bg-overlay",
+            "transition-[color,background-color] duration-(--transition-speed)",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
+            buttonClassName,
+          )}
+        >
+          <GearIcon />
+        </button>
+      </Modal.Trigger>
+      <Modal.Content
+        aria-label={label}
+        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+      >
+        <SettingsPanel {...panelProps} />
+      </Modal.Content>
+    </Modal>
   );
 }
