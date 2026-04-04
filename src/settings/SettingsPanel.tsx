@@ -61,9 +61,9 @@ function inferGroup(name: string): string {
 
 // ─── Theme list — derived from the themes index, never hardcoded ──────────────
 
-const BUILT_IN_THEMES = (
-  Object.entries(themes) as [string, ThemeTokens][]
-).map(([id, tokens]) => ({ id, tokens }));
+const BUILT_IN_THEMES = (Object.entries(themes) as [string, ThemeTokens][]).map(
+  ([id, tokens]) => ({ id, tokens }),
+);
 
 const MODES: DesignMode[] = ["classic", "neo", "glass", "minimal"];
 
@@ -85,7 +85,10 @@ function TokenControl({
     const safeHex = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
     return (
       <div className="flex items-center justify-between gap-2">
-        <Label className="text-[10px] text-fg-muted truncate flex-1" title={name}>
+        <Label
+          className="text-[10px] text-fg-muted truncate flex-1"
+          title={name}
+        >
           {label}
         </Label>
         <input
@@ -183,10 +186,7 @@ export function SettingsPanel({
   }
 
   return (
-    <Card
-      className={cn("w-72 overflow-y-auto max-h-screen", className)}
-      variant="elevated"
-    >
+    <div>
       <p className="text-sm font-semibold text-fg-primary mb-5">Settings</p>
 
       {/* ── Design Mode ──────────────────────────────────────────────── */}
@@ -268,6 +268,6 @@ export function SettingsPanel({
           {renderAppSettings()}
         </SettingsSection>
       )}
-    </Card>
+    </div>
   );
 }
