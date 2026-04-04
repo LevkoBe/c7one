@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { useI18n } from "../../i18n/I18nContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,9 +46,11 @@ export function Table<T extends object>({
   className,
   rowClassName,
   onRowClick,
-  emptyMessage = "No data",
+  emptyMessage,
   stickyHeader = false,
 }: TableProps<T>) {
+  const { t } = useI18n();
+  const resolvedEmpty = emptyMessage ?? t("data.noData");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>(null);
 
@@ -126,7 +129,7 @@ export function Table<T extends object>({
                   colSpan={columns.length}
                   className="px-4 py-10 text-center text-fg-disabled text-sm"
                 >
-                  {emptyMessage}
+                  {resolvedEmpty}
                 </td>
               </tr>
             ) : (

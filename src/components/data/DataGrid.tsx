@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useMemo } from "react";
 import { cn } from "../../utils/cn";
+import { useI18n } from "../../i18n/I18nContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,8 +34,10 @@ export function DataGrid<T extends object>({
   className,
   onRowClick,
   selectedIndex,
-  emptyMessage = "No data",
+  emptyMessage,
 }: DataGridProps<T>) {
+  const { locale, t } = useI18n();
+  const resolvedEmpty = emptyMessage ?? t("data.noData");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -102,7 +105,7 @@ export function DataGrid<T extends object>({
           className="flex items-center justify-center text-sm text-fg-disabled"
           style={{ height: Math.min(viewportHeight, 160) }}
         >
-          {emptyMessage}
+          {resolvedEmpty}
         </div>
       ) : (
         <div
@@ -180,7 +183,7 @@ export function DataGrid<T extends object>({
       {/* ── Footer: row count ──────────────────────────────────────── */}
       <div className="px-3 py-1.5 border-t border-border bg-bg-elevated">
         <span className="text-[10px] text-fg-disabled">
-          {data.length.toLocaleString()} row{data.length !== 1 ? "s" : ""}
+          {t("data.rows", { count: data.length.toLocaleString(locale) })}
         </span>
       </div>
     </div>

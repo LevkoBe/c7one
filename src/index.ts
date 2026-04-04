@@ -197,3 +197,11 @@ export type {
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 export { SettingsPanel, SettingsModalButton } from "./settings/SettingsPanel";
 export type { SettingsPanelProps, SettingKey, SettingsPreset, SettingsModalButtonProps } from "./settings/SettingsPanel";
+
+// ─── Localization (i18n) ──────────────────────────────────────────────────────
+export { I18nProvider, useI18n } from "./i18n/I18nContext";
+export type { I18nProviderProps, I18nContextValue } from "./i18n/I18nContext";
+export type { Locale, LibMessages } from "./i18n/types";
+export { en } from "./i18n/locales/en";
+export { uk } from "./i18n/locales/uk";
+

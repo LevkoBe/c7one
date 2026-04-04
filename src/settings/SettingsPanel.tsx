@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Settings } from "lucide-react";
 import { useC7One } from "../context/C7OneContext";
+import { useI18n } from "../i18n/I18nContext";
 import type { C7OneContextValue, DesignMode, ThemeTokens } from "../ccc/types";
 import * as themes from "../ccc/themes";
 import { cn } from "../utils/cn";
@@ -186,6 +187,7 @@ export function SettingsPanel({
   className,
 }: SettingsPanelProps) {
   const ctx = useC7One();
+  const { t } = useI18n();
   const allTokens = ctx.getAllTokens();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -247,17 +249,17 @@ export function SettingsPanel({
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <p className="text-sm font-semibold text-fg-primary">Settings</p>
+        <p className="text-sm font-semibold text-fg-primary">{t("settings.title")}</p>
         <div className="flex gap-1.5">
           <Button size="sm" variant="secondary" onClick={handleSave}>
-            Save
+            {t("settings.save")}
           </Button>
           <Button
             size="sm"
             variant="secondary"
             onClick={() => fileInputRef.current?.click()}
           >
-            Load
+            {t("settings.load")}
           </Button>
           <input
             ref={fileInputRef}
@@ -271,7 +273,7 @@ export function SettingsPanel({
 
       {/* ── Presets ──────────────────────────────────────────────────── */}
       {presets && presets.length > 0 && (
-        <SettingsSection title="Presets">
+        <SettingsSection title={t("settings.presets")}>
           <div className="flex flex-wrap gap-1.5">
             {presets.map((preset, i) => (
               <Button
@@ -292,7 +294,7 @@ export function SettingsPanel({
 
       {/* ── Design Mode ──────────────────────────────────────────────── */}
       {showMode && (
-        <SettingsSection title="Design Mode">
+        <SettingsSection title={t("settings.designMode")}>
           <div className="grid grid-cols-2 gap-1.5">
             {MODES.map((m) => (
               <Button
@@ -311,7 +313,7 @@ export function SettingsPanel({
 
       {/* ── Theme swatches + individual color pickers ─────────────── */}
       {showColors && (
-        <SettingsSection title="Theme">
+        <SettingsSection title={t("settings.theme")}>
           <div className="flex flex-wrap gap-2">
             {BUILT_IN_THEMES.map((t) => (
               <button
@@ -365,7 +367,7 @@ export function SettingsPanel({
 
       {/* ── App-specific settings slot ─────────────────────────────── */}
       {renderAppSettings && (
-        <SettingsSection title="App Settings">
+        <SettingsSection title={t("settings.appSettings")}>
           {renderAppSettings()}
         </SettingsSection>
       )}
@@ -383,16 +385,18 @@ export interface SettingsModalButtonProps extends SettingsPanelProps {
 
 
 export function SettingsModalButton({
-  label = "Open settings",
+  label,
   buttonClassName,
   ...panelProps
 }: SettingsModalButtonProps) {
+  const { t } = useI18n();
+  const resolvedLabel = label ?? t("settings.openSettings");
   return (
     <Modal>
       <Modal.Trigger asChild>
         <button
-          aria-label={label}
-          title={label}
+          aria-label={resolvedLabel}
+          title={resolvedLabel}
           className={cn(
             "flex items-center justify-center w-7 h-7 rounded-sm",
             "text-fg-muted hover:text-fg-primary hover:bg-bg-overlay",
@@ -405,7 +409,7 @@ export function SettingsModalButton({
         </button>
       </Modal.Trigger>
       <Modal.Content
-        aria-label={label}
+        aria-label={resolvedLabel}
         className="max-w-2xl max-h-[80vh] overflow-y-auto"
       >
         <SettingsPanel {...panelProps} />
