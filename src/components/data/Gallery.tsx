@@ -100,7 +100,7 @@ export function GalleryCard({
       className={cn(
         "relative group w-full h-full",
         "bg-bg-elevated [border-width:var(--border-width)] border-border",
-        "overflow-hidden transition-[transform,box-shadow] duration-[var(--transition-speed)]",
+        "overflow-hidden transition-[transform,box-shadow] duration-(--transition-speed)",
         "hover:scale-[1.02]",
         className,
       )}

@@ -21,7 +21,6 @@ import { cn } from "../utils/cn";
 const HEADER_H    = 32;  // px — matches h-8
 const EDGE_T      = 28;  // px — proximity threshold for showing [+]
 const COMPACT_W   = 120; // px — header narrower than this shows only the expand button
-const PANEL_MS    = 220; // ms — collapse / expand / split animation duration
 
 // ─── DynamicPanelRoot ─────────────────────────────────────────────────────────
 
@@ -223,7 +222,7 @@ function PanelSlot({
       className={cn("min-w-0 min-h-0 overflow-hidden flex", innerDirection)}
       style={{
         flex,
-        transition: `flex-grow ${PANEL_MS}ms ease, flex-basis ${PANEL_MS}ms ease`,
+        transition: "flex-grow var(--transition-speed) ease, flex-basis var(--transition-speed) ease",
       }}
     >
       {children}
@@ -246,7 +245,7 @@ function ResizeHandle({
       onMouseDown={onStartDrag}
       className={cn(
         "shrink-0 relative flex items-center justify-center select-none",
-        "bg-transparent hover:bg-accent/20 transition-colors duration-[var(--transition-speed)]",
+        "bg-transparent hover:bg-accent/20 transition-colors duration-(--transition-speed)",
         "focus-visible:outline-none",
         isH ? "w-1 cursor-col-resize" : "h-1 cursor-row-resize",
       )}
@@ -322,16 +321,14 @@ function LeafContent({ node }: { node: LeafNode }) {
         onExpand={() => expandPanel(node.id)}
       />
 
-      {/* Content area — hidden when collapsed so header fills the slot */}
-      {!node.collapsed && (
-        <div className="flex-1 min-h-0 overflow-auto">
-          {windowDef ? (
-            <windowDef.component />
-          ) : (
-            <WindowSelector leafId={node.id} />
-          )}
-        </div>
-      )}
+      {/* Content area — clipped by PanelSlot's overflow-hidden during collapse animation */}
+      <div className="flex-1 min-h-0 overflow-auto">
+        {windowDef ? (
+          <windowDef.component />
+        ) : (
+          <WindowSelector leafId={node.id} />
+        )}
+      </div>
 
       {/* Single [+] button at the detected edge — no blocking overlay */}
       {hoveredEdge && (
@@ -368,10 +365,10 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
     <button
       onClick={() => onSplit(direction, position)}
       className={cn(
-        "absolute z-20 w-5 h-5 rounded-full border-0",
-        "bg-accent text-accent-fg",
+        "absolute z-20 w-5 h-5 rounded-full [border-width:var(--border-width)] border-transparent",
+        "bg-accent text-bg-base",
         "flex items-center justify-center",
-        "hover:scale-110 active:scale-95 transition-transform duration-100",
+        "hover:scale-110 active:scale-95 transition-transform duration-(--transition-speed)",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
         posCls,
       )}
@@ -388,7 +385,7 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
 const headerBtnCls = cn(
   "flex items-center justify-center w-5 h-5 rounded-sm",
   "text-fg-muted hover:text-fg-primary hover:bg-bg-overlay",
-  "transition-[color,background-color] duration-[var(--transition-speed)]",
+  "transition-[color,background-color] duration-(--transition-speed)",
   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
 );
 
@@ -427,7 +424,7 @@ function DynamicLeafHeader({
       className={cn(
         "flex items-center gap-2 px-3 h-8 shrink-0",
         "bg-bg-elevated border-b border-border",
-        "transition-[background-color,border-color] duration-[var(--transition-speed)]",
+        "transition-[background-color,border-color] duration-(--transition-speed)",
         compact && "justify-center px-1",
       )}
     >

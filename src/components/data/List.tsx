@@ -76,7 +76,7 @@ export function ListItem({
     <div
       className={cn(
         "flex items-center gap-3 px-4 py-3",
-        "transition-colors duration-[var(--transition-speed)]",
+        "transition-colors duration-(--transition-speed)",
         props.onClick && "cursor-pointer hover:bg-bg-overlay",
         className,
       )}

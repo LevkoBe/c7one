@@ -54,7 +54,7 @@ export function PanelSplit({
         className={cn(
           "relative flex items-center justify-center",
           "bg-transparent hover:bg-accent/20",
-          "transition-colors duration-[var(--transition-speed)]",
+          "transition-colors duration-(--transition-speed)",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
           direction === "horizontal"
             ? "w-1 cursor-col-resize"

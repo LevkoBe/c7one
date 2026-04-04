@@ -43,7 +43,7 @@ export function ModalContent({
           "w-full max-w-lg",
           "bg-bg-elevated [border-width:var(--border-width)] border-border",
           "rounded p-6 shadow-xl",
-          "transition-all duration-[var(--transition-speed)]",
+          "transition-all duration-(--transition-speed)",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -65,7 +65,7 @@ export function ModalContent({
         <Dialog.Close
           className={cn(
             "absolute right-4 top-4 text-fg-muted hover:text-fg-primary",
-            "rounded-sm transition-colors duration-[var(--transition-speed)]",
+            "rounded-sm transition-colors duration-(--transition-speed)",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
           )}
           aria-label="Close"

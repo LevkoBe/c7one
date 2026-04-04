@@ -86,7 +86,7 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       {...props}
     >
       <RadixProgress.Indicator
-        className="h-full bg-accent transition-all duration-[var(--transition-speed)] ease-in-out"
+        className="h-full bg-accent transition-all duration-(--transition-speed) ease-in-out"
         style={{ width: `${((value ?? 0) / (max ?? 100)) * 100}%` }}
       />
     </RadixProgress.Root>

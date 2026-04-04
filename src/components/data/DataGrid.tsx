@@ -138,7 +138,7 @@ export function DataGrid<T extends object>({
                   }}
                   className={cn(
                     "flex border-b border-border last:border-0",
-                    "transition-colors duration-[var(--transition-speed)]",
+                    "transition-colors duration-(--transition-speed)",
                     isSelected
                       ? "bg-accent/10"
                       : "bg-bg-base hover:bg-bg-elevated",

@@ -33,7 +33,7 @@ export const TabsTrigger = React.forwardRef<
       "inline-flex items-center justify-center px-3 py-1.5",
       "text-sm font-medium text-fg-muted",
       "rounded-[calc(var(--radius)*0.75)]",
-      "transition-[background-color,color] duration-[var(--transition-speed)]",
+      "transition-[background-color,color] duration-(--transition-speed)",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
       "hover:text-fg-primary",
       "data-[state=active]:bg-bg-overlay data-[state=active]:text-fg-primary",
@@ -114,7 +114,7 @@ export function Breadcrumb({ items, className, ...props }: BreadcrumbProps) {
               ) : (
                 <a
                   href={item.href}
-                  className="text-sm text-fg-muted hover:text-fg-primary transition-colors duration-[var(--transition-speed)]"
+                  className="text-sm text-fg-muted hover:text-fg-primary transition-colors duration-(--transition-speed)"
                 >
                   {item.label}
                 </a>

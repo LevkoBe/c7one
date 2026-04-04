@@ -290,10 +290,10 @@ describe("Card — CSS token classes", () => {
     );
   });
 
-  it("uses duration-[var(--transition-speed)] for dynamic transition", () => {
+  it("uses duration-(--transition-speed) for dynamic transition", () => {
     const { container } = render(<Card />);
     expect(container.firstElementChild!.className).toContain(
-      "duration-[var(--transition-speed)]",
+      "duration-(--transition-speed)",
     );
   });
 

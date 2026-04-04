@@ -14,7 +14,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         "bg-bg-elevated text-fg-primary",
         "[border-width:var(--border-width)] rounded",
         "placeholder:text-fg-disabled",
-        "transition-[border-color,box-shadow] duration-[var(--transition-speed)]",
+        "transition-[border-color,box-shadow] duration-(--transition-speed)",
         "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-bg-base",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         error ? "border-error focus:ring-error" : "border-border",

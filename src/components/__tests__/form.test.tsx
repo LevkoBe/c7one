@@ -346,10 +346,10 @@ describe("Button — CSS token classes", () => {
     );
   });
 
-  it("uses duration-[var(--transition-speed)] for dynamic transition", () => {
+  it("uses duration-(--transition-speed) for dynamic transition", () => {
     const { container } = render(<Button>x</Button>);
     expect(container.firstElementChild!.className).toContain(
-      "duration-[var(--transition-speed)]",
+      "duration-(--transition-speed)",
     );
   });
 
@@ -369,19 +369,19 @@ describe("Input — CSS token classes", () => {
     );
   });
 
-  it("uses duration-[var(--transition-speed)] for dynamic transition", () => {
+  it("uses duration-(--transition-speed) for dynamic transition", () => {
     render(<Input />);
     expect(screen.getByRole("textbox").className).toContain(
-      "duration-[var(--transition-speed)]",
+      "duration-(--transition-speed)",
     );
   });
 });
 
 describe("Toggle — CSS token classes", () => {
-  it("switch root uses duration-[var(--transition-speed)] for transition", () => {
+  it("switch root uses duration-(--transition-speed) for transition", () => {
     render(<Toggle />);
     expect(screen.getByRole("switch").className).toContain(
-      "duration-[var(--transition-speed)]",
+      "duration-(--transition-speed)",
     );
   });
 });

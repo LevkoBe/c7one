@@ -115,7 +115,7 @@ export const A = React.forwardRef<
     ref={ref}
     className={cn(
       "text-accent underline-offset-4 hover:underline",
-      "transition-colors duration-[var(--transition-speed)]",
+      "transition-colors duration-(--transition-speed)",
       "hover:text-accent-hover",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm",
       className,

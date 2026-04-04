@@ -50,7 +50,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center font-medium",
           "rounded [border-width:var(--border-width)]",
-          "transition-all duration-[var(--transition-speed)]",
+          "transition-all duration-(--transition-speed)",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base",
           "disabled:opacity-50 disabled:pointer-events-none",
           "select-none cursor-pointer",

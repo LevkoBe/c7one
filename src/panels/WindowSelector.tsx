@@ -22,7 +22,7 @@ export function WindowSelector({ leafId }: WindowSelectorProps) {
               "flex flex-col items-center gap-2 p-3 rounded",
               "border border-border bg-bg-elevated",
               "hover:border-accent hover:bg-bg-overlay",
-              "transition-[background-color,border-color] duration-[var(--transition-speed)]",
+              "transition-[background-color,border-color] duration-(--transition-speed)",
               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
               "text-fg-primary cursor-pointer",
             )}
