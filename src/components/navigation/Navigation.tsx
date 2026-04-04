@@ -1,5 +1,6 @@
 import React from "react";
 import * as RadixTabs from "@radix-ui/react-tabs";
+import { ChevronRight } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -84,22 +85,7 @@ export function Breadcrumb({ items, className, ...props }: BreadcrumbProps) {
           return (
             <li key={i} className="flex items-center gap-1.5">
               {i > 0 && (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="none"
-                  className="text-fg-disabled shrink-0"
-                  aria-hidden
-                >
-                  <path
-                    d="M4.5 2.5L7.5 6L4.5 9.5"
-                    stroke="currentColor"
-                    strokeWidth="1.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ChevronRight width={12} height={12} className="text-fg-disabled shrink-0" aria-hidden />
               )}
               {isLast || !item.href ? (
                 <span

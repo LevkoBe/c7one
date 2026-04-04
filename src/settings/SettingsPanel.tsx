@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { Settings } from "lucide-react";
 import { useC7One } from "../context/C7OneContext";
 import type { C7OneContextValue, DesignMode, ThemeTokens } from "../ccc/types";
 import * as themes from "../ccc/themes";
@@ -380,25 +381,6 @@ export interface SettingsModalButtonProps extends SettingsPanelProps {
   buttonClassName?: string;
 }
 
-function GearIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.3" />
-      <path
-        d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.75 2.75l1.06 1.06M10.19 10.19l1.06 1.06M2.75 11.25l1.06-1.06M10.19 3.81l1.06-1.06"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 export function SettingsModalButton({
   label = "Open settings",
@@ -419,7 +401,7 @@ export function SettingsModalButton({
             buttonClassName,
           )}
         >
-          <GearIcon />
+          <Settings width={14} height={14} aria-hidden="true" />
         </button>
       </Modal.Trigger>
       <Modal.Content

@@ -1,6 +1,6 @@
 {
   "name": "@levkobe/c7one",
-  "version": "0.2.39",
+  "version": "0.2.42",
   "description": "C7ONE — One unified UI system governed by 7 core principles",
   "type": "module",
   "main": "./dist/index.js",
@@ -43,6 +43,7 @@
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.0",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.513.0",
     "react-resizable-panels": "^2.1.0",
     "tailwind-merge": "^2.5.4"
   },

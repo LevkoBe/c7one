@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Menu, X } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
@@ -84,20 +85,9 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
               onClick={() => setMobileOpen((v) => !v)}
             >
               {mobileOpen ? (
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M3 3L15 15M15 3L3 15"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                <X width={18} height={18} aria-hidden="true" />
               ) : (
-                <>
-                  <span className="block w-5 h-0.5 bg-current rounded" />
-                  <span className="block w-5 h-0.5 bg-current rounded" />
-                  <span className="block w-5 h-0.5 bg-current rounded" />
-                </>
+                <Menu width={18} height={18} aria-hidden="true" />
               )}
             </button>
           )}

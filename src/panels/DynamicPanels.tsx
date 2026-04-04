@@ -4,6 +4,7 @@
 // All other panels are completely unaffected — correct VSCode-style behavior.
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Plus, Minus, Maximize2, X } from "lucide-react";
 import { WindowProvider, useWindowContext } from "./WindowContext";
 import type {
   GroupNode,
@@ -551,75 +552,7 @@ function DynamicLeafHeader({
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-function PlusIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M5 2v6M2 5h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-function MinimizeIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 5h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-function ExpandIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 3.5h6M2 6.5h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-function CloseIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2.5 2.5l5 5M7.5 2.5l-5 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+function PlusIcon() { return <Plus width={10} height={10} aria-hidden="true" />; }
+function MinimizeIcon() { return <Minus width={10} height={10} aria-hidden="true" />; }
+function ExpandIcon() { return <Maximize2 width={10} height={10} aria-hidden="true" />; }
+function CloseIcon() { return <X width={10} height={10} aria-hidden="true" />; }

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -29,28 +30,10 @@ export interface TableProps<T> {
 // ─── Sort icon ────────────────────────────────────────────────────────────────
 
 function SortIcon({ direction }: { direction: SortDirection }) {
-  return (
-    <span className="inline-flex flex-col gap-px ml-1.5 opacity-50 group-hover:opacity-100 transition-opacity">
-      <svg
-        width="8"
-        height="5"
-        viewBox="0 0 8 5"
-        fill="none"
-        className={direction === "asc" ? "opacity-100" : "opacity-30"}
-      >
-        <path d="M4 0.5L7.5 4.5H0.5L4 0.5Z" fill="currentColor" />
-      </svg>
-      <svg
-        width="8"
-        height="5"
-        viewBox="0 0 8 5"
-        fill="none"
-        className={direction === "desc" ? "opacity-100" : "opacity-30"}
-      >
-        <path d="M4 4.5L0.5 0.5H7.5L4 4.5Z" fill="currentColor" />
-      </svg>
-    </span>
-  );
+  const cls = "ml-1.5 opacity-50 group-hover:opacity-100 transition-opacity shrink-0";
+  if (direction === "asc") return <ChevronUp width={12} height={12} className={cn(cls, "opacity-100")} aria-hidden="true" />;
+  if (direction === "desc") return <ChevronDown width={12} height={12} className={cn(cls, "opacity-100")} aria-hidden="true" />;
+  return <ChevronsUpDown width={12} height={12} className={cls} aria-hidden="true" />;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────

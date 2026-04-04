@@ -3,6 +3,7 @@ import * as RadixCheckbox from "@radix-ui/react-checkbox";
 import * as RadixSwitch from "@radix-ui/react-switch";
 import * as RadixSlider from "@radix-ui/react-slider";
 import * as RadixSelect from "@radix-ui/react-select";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 // ─── Textarea ─────────────────────────────────────────────────────────────────
@@ -57,15 +58,7 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
         {...props}
       >
         <RadixCheckbox.Indicator className="flex items-center justify-center text-bg-base">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path
-              d="M1.5 5L4 7.5L8.5 2.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Check width={10} height={10} aria-hidden="true" />
         </RadixCheckbox.Indicator>
       </RadixCheckbox.Root>
       {label && (
@@ -205,15 +198,7 @@ export function Select({
       >
         <RadixSelect.Value placeholder={placeholder} />
         <RadixSelect.Icon>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              d="M2.5 4.5L6 8L9.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ChevronDown width={12} height={12} aria-hidden="true" />
         </RadixSelect.Icon>
       </RadixSelect.Trigger>
       <RadixSelect.Portal>
