@@ -59,7 +59,7 @@ export function Spinner({ size = "md", className }: SpinnerProps) {
       role="status"
       aria-label="Loading"
       className={cn(
-        "block rounded-full border-border border-t-accent animate-spin",
+        "block rounded border-border border-t-accent animate-spin",
         spinnerSizes[size],
         className,
       )}
@@ -80,7 +80,7 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       value={value}
       max={max}
       className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full bg-bg-overlay",
+        "relative h-2 w-full overflow-hidden rounded bg-bg-overlay",
         className,
       )}
       {...props}
@@ -106,7 +106,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       ref={ref}
       className={cn(
         "animate-pulse bg-bg-overlay",
-        rounded ? "rounded-full" : "rounded",
+        rounded ? "rounded" : "rounded",
         className,
       )}
       {...props}

@@ -1,6 +1,6 @@
 {
   "name": "@levkobe/c7one",
-  "version": "0.2.24",
+  "version": "0.2.25",
   "description": "C7ONE — One unified UI system governed by 7 core principles",
   "type": "module",
   "main": "./dist/index.js",

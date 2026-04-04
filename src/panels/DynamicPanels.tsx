@@ -18,9 +18,9 @@ import { cn } from "../utils/cn";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const HEADER_H    = 32;  // px — matches h-8
-const EDGE_T      = 28;  // px — proximity threshold for showing [+]
-const COMPACT_W   = 120; // px — header narrower than this shows only the expand button
+const HEADER_H = 32; // px — matches h-8
+const EDGE_T = 28; // px — proximity threshold for showing [+]
+const COMPACT_W = 120; // px — header narrower than this shows only the expand button
 
 // ─── DynamicPanelRoot ─────────────────────────────────────────────────────────
 
@@ -32,7 +32,12 @@ export interface DynamicPanelRootProps {
   className?: string;
 }
 
-export function DynamicPanelRoot({ windows, layout, storageKey, className }: DynamicPanelRootProps) {
+export function DynamicPanelRoot({
+  windows,
+  layout,
+  storageKey,
+  className,
+}: DynamicPanelRootProps) {
   return (
     <WindowProvider windows={windows} layout={layout} storageKey={storageKey}>
       <DynamicPanelInner className={className} />
@@ -144,11 +149,15 @@ function DynamicGroup({ node }: { node: GroupNode }) {
       )}
     >
       {node.children.map((child, i) => {
-        const isCollapsed = child.type === "leaf" && ((child as LeafNode).collapsed ?? false);
+        const isCollapsed =
+          child.type === "leaf" && ((child as LeafNode).collapsed ?? false);
         const prevChild = node.children[i - 1];
         const prevIsCollapsed =
-          prevChild?.type === "leaf" && ((prevChild as LeafNode).collapsed ?? false);
-        const targetFlex = isCollapsed ? `0 0 ${HEADER_H}px` : `${sizes[i]} 1 0%`;
+          prevChild?.type === "leaf" &&
+          ((prevChild as LeafNode).collapsed ?? false);
+        const targetFlex = isCollapsed
+          ? `0 0 ${HEADER_H}px`
+          : `${sizes[i]} 1 0%`;
         return (
           <React.Fragment key={child.id}>
             {/* No handle adjacent to collapsed panels — they're fixed-size header strips */}
@@ -222,7 +231,8 @@ function PanelSlot({
       className={cn("min-w-0 min-h-0 overflow-hidden flex", innerDirection)}
       style={{
         flex,
-        transition: "flex-grow var(--transition-speed) ease, flex-basis var(--transition-speed) ease",
+        transition:
+          "flex-grow var(--transition-speed) ease, flex-basis var(--transition-speed) ease",
       }}
     >
       {children}
@@ -252,7 +262,7 @@ function ResizeHandle({
     >
       <div
         className={cn(
-          "bg-border rounded-full pointer-events-none",
+          "bg-border rounded pointer-events-none",
           isH ? "w-px h-8" : "h-px w-8",
         )}
       />
@@ -287,16 +297,19 @@ function LeafContent({ node }: { node: LeafNode }) {
     const h = rect.height;
 
     // Don't trigger inside the header strip
-    if (y < HEADER_H) { setHoveredEdge(null); return; }
+    if (y < HEADER_H) {
+      setHoveredEdge(null);
+      return;
+    }
 
     const cy = y - HEADER_H;
     const ch = h - HEADER_H;
 
     const candidates = [
-      { edge: "top"    as const, dist: cy },
+      { edge: "top" as const, dist: cy },
       { edge: "bottom" as const, dist: ch - cy },
-      { edge: "left"   as const, dist: x },
-      { edge: "right"  as const, dist: w - x },
+      { edge: "left" as const, dist: x },
+      { edge: "right" as const, dist: w - x },
     ];
     const best = candidates.reduce((a, b) => (a.dist < b.dist ? a : b));
     setHoveredEdge(best.dist <= EDGE_T ? best.edge : null);
@@ -357,17 +370,17 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
     edge === "top" || edge === "left" ? "before" : "after";
 
   const posCls = {
-    top:    "top-9 left-1/2 -translate-x-1/2",
+    top: "top-9 left-1/2 -translate-x-1/2",
     bottom: "bottom-1 left-1/2 -translate-x-1/2",
-    left:   "left-1 top-1/2 -translate-y-1/2",
-    right:  "right-1 top-1/2 -translate-y-1/2",
+    left: "left-1 top-1/2 -translate-y-1/2",
+    right: "right-1 top-1/2 -translate-y-1/2",
   }[edge];
 
   return (
     <button
       onClick={() => onSplit(direction, position)}
       className={cn(
-        "absolute z-20 w-5 h-5 rounded-full [border-width:var(--border-width)] border-transparent",
+        "absolute z-20 w-5 h-5 rounded [border-width:var(--border-width)] border-transparent",
         "bg-accent text-bg-base",
         "flex items-center justify-center",
         "hover:scale-110 active:scale-95 transition-transform duration-(--transition-speed)",
@@ -482,29 +495,73 @@ function DynamicLeafHeader({
 
 function PlusIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M5 2v6M2 5h6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 function MinimizeIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M2 5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M2 5h6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 function ExpandIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M2 3.5h6M2 6.5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M2 3.5h6M2 6.5h6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 function CloseIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M2.5 2.5l5 5M7.5 2.5l-5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

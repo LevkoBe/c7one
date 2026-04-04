@@ -63,7 +63,7 @@ export function PanelSplit({
       >
         <div
           className={cn(
-            "bg-border rounded-full",
+            "bg-border rounded",
             direction === "horizontal" ? "w-px h-8" : "h-px w-8",
           )}
         />
