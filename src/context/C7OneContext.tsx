@@ -20,6 +20,26 @@ import { applyModeClass, injectVar, injectVars } from "../ccc/inject";
 import { dark } from "../ccc/themes/dark";
 import * as modes from "../ccc/modes";
 
+// ─── Persistence ─────────────────────────────────────────────────────────────
+
+interface PersistedSettings {
+  mode: DesignMode;
+  colors: ThemeTokens;
+  shape: Required<ShapeConfig>;
+  motion: Required<MotionConfig>;
+  depth: Required<DepthConfig>;
+  tokens: Record<string, string>;
+}
+
+function loadSettings(storageKey: string): PersistedSettings | null {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    return raw ? (JSON.parse(raw) as PersistedSettings) : null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
 const DEFAULT_SHAPE: Required<ShapeConfig> = {
@@ -45,6 +65,8 @@ export interface C7OneProviderProps {
   children: React.ReactNode;
   defaultMode?: DesignMode;
   config?: C7OneConfig;
+  /** localStorage key for persisting settings across sessions. */
+  storageKey?: string;
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -53,36 +75,49 @@ export function C7OneProvider({
   children,
   defaultMode = "classic",
   config = {},
+  storageKey,
 }: C7OneProviderProps) {
   // Initialize shape/motion/depth from the mode preset first, then let
   // explicit config values win on top. This keeps state in sync with the DOM.
   const initialPresetTokens = modes[defaultMode].tokens as Record<string, string>;
 
-  const [mode, setModeState] = useState<DesignMode>(defaultMode);
-  const [colors, setColorsState] = useState<ThemeTokens>({
-    ...dark,
-    ...config.colors,
-  });
-  const [shape, setShapeState] = useState<Required<ShapeConfig>>({
-    ...DEFAULT_SHAPE,
-    ...(initialPresetTokens["--radius"] ? { radius: initialPresetTokens["--radius"] } : {}),
-    ...(initialPresetTokens["--border-width"] ? { borderWidth: initialPresetTokens["--border-width"] } : {}),
-    ...config.shape,
-  });
-  const [motion, setMotionState] = useState<Required<MotionConfig>>({
-    ...DEFAULT_MOTION,
-    ...(initialPresetTokens["--transition-speed"] ? { transitionSpeed: initialPresetTokens["--transition-speed"] } : {}),
-    ...config.motion,
-  });
-  const [depth, setDepthState] = useState<Required<DepthConfig>>({
-    ...DEFAULT_DEPTH,
-    ...(initialPresetTokens["--shadow-intensity"] !== undefined
-      ? { shadowIntensity: parseFloat(initialPresetTokens["--shadow-intensity"]) }
-      : {}),
-    ...config.depth,
-  });
-  const [tokens, setTokensState] = useState<Record<string, string>>(
-    config.tokens ?? {},
+  // Load persisted settings once at mount. The lazy initializer runs only once.
+  const [saved] = useState<PersistedSettings | null>(() =>
+    storageKey ? loadSettings(storageKey) : null,
+  );
+
+  const [mode, setModeState] = useState<DesignMode>(() =>
+    saved?.mode ?? defaultMode,
+  );
+  const [colors, setColorsState] = useState<ThemeTokens>(() =>
+    saved?.colors ?? { ...dark, ...config.colors },
+  );
+  const [shape, setShapeState] = useState<Required<ShapeConfig>>(() =>
+    saved?.shape ?? {
+      ...DEFAULT_SHAPE,
+      ...(initialPresetTokens["--radius"] ? { radius: initialPresetTokens["--radius"] } : {}),
+      ...(initialPresetTokens["--border-width"] ? { borderWidth: initialPresetTokens["--border-width"] } : {}),
+      ...config.shape,
+    },
+  );
+  const [motion, setMotionState] = useState<Required<MotionConfig>>(() =>
+    saved?.motion ?? {
+      ...DEFAULT_MOTION,
+      ...(initialPresetTokens["--transition-speed"] ? { transitionSpeed: initialPresetTokens["--transition-speed"] } : {}),
+      ...config.motion,
+    },
+  );
+  const [depth, setDepthState] = useState<Required<DepthConfig>>(() =>
+    saved?.depth ?? {
+      ...DEFAULT_DEPTH,
+      ...(initialPresetTokens["--shadow-intensity"] !== undefined
+        ? { shadowIntensity: parseFloat(initialPresetTokens["--shadow-intensity"]) }
+        : {}),
+      ...config.depth,
+    },
+  );
+  const [tokens, setTokensState] = useState<Record<string, string>>(() =>
+    saved?.tokens ?? config.tokens ?? {},
   );
 
   // Apply a mode preset, then let explicit overrides win on top
@@ -115,6 +150,17 @@ export function C7OneProvider({
       isFirst.current = false;
     }
   }, [colors, shape, motion, depth, tokens]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Persist settings to localStorage ─────────────────────────────────────
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const settings: PersistedSettings = { mode, colors, shape, motion, depth, tokens };
+      localStorage.setItem(storageKey, JSON.stringify(settings));
+    } catch {
+      // Ignore write errors (e.g. private browsing quota exceeded)
+    }
+  }, [storageKey, mode, colors, shape, motion, depth, tokens]);
 
   // ── Setters ───────────────────────────────────────────────────────────────
 

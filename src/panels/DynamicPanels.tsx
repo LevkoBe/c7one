@@ -27,14 +27,14 @@ const COMPACT_W   = 120; // px — header narrower than this shows only the expa
 export interface DynamicPanelRootProps {
   windows: WindowDef[];
   layout: LayoutNodeDecl;
-  /** Reserved for future localStorage persistence of divider positions. */
+  /** localStorage key for persisting the panel layout across sessions. */
   storageKey?: string;
   className?: string;
 }
 
-export function DynamicPanelRoot({ windows, layout, className }: DynamicPanelRootProps) {
+export function DynamicPanelRoot({ windows, layout, storageKey, className }: DynamicPanelRootProps) {
   return (
-    <WindowProvider windows={windows} layout={layout}>
+    <WindowProvider windows={windows} layout={layout} storageKey={storageKey}>
       <DynamicPanelInner className={className} />
     </WindowProvider>
   );

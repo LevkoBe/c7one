@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -84,9 +85,16 @@ export interface WindowContextValue {
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
 
-function makeIdGen() {
-  let n = 0;
+function makeIdGen(start = 0) {
+  let n = start;
   return () => `p${++n}`;
+}
+
+function maxIdInTree(node: PanelTreeNode): number {
+  const n = parseInt(node.id.replace(/^p/, ""), 10);
+  const self = isNaN(n) ? 0 : n;
+  if (node.type === "leaf") return self;
+  return Math.max(self, ...node.children.map(maxIdInTree));
 }
 
 export function initTree(decl: LayoutNodeDecl, idGen: () => string): PanelTreeNode {
@@ -387,16 +395,30 @@ const WindowContext = createContext<WindowContextValue | null>(null);
 export function WindowProvider({
   windows,
   layout,
+  storageKey,
   children,
 }: {
   windows: WindowDef[];
   layout: LayoutNodeDecl;
+  storageKey?: string;
   children: React.ReactNode;
 }) {
   const idGenRef = useRef(makeIdGen());
-  const [tree, setTree] = useState<PanelTreeNode>(() =>
-    initTree(layout, idGenRef.current),
-  );
+  const [tree, setTree] = useState<PanelTreeNode>(() => {
+    if (storageKey) {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          const restored = JSON.parse(raw) as PanelTreeNode;
+          idGenRef.current = makeIdGen(maxIdInTree(restored));
+          return restored;
+        }
+      } catch {
+        // Fall through to default
+      }
+    }
+    return initTree(layout, idGenRef.current);
+  });
 
   const splitPanel = useCallback(
     (leafId: string, direction: SplitDirection, position: "before" | "after") =>
@@ -436,6 +458,15 @@ export function WindowProvider({
       ),
     [],
   );
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(tree));
+    } catch {
+      // Ignore write errors
+    }
+  }, [storageKey, tree]);
 
   const value = useMemo(
     () => ({
