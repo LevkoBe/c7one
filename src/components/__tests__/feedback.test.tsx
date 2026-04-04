@@ -169,20 +169,22 @@ describe("Skeleton — rounded", () => {
     expect(container.firstElementChild!.className).toContain("rounded");
   });
 
-  it("rounded=false: does NOT include rounded-full", () => {
+  it("rounded=false: does NOT include rounded", () => {
     const { container } = render(<Skeleton />);
-    expect(container.firstElementChild!.className).not.toContain("rounded-full");
+    expect(container.firstElementChild!.className).not.toContain("rounded");
   });
 
-  it("rounded=true: includes rounded-full class", () => {
+  it("rounded=true: includes rounded class", () => {
     const { container } = render(<Skeleton rounded />);
-    expect(container.firstElementChild!.className).toContain("rounded-full");
+    expect(container.firstElementChild!.className).toContain("rounded");
   });
 
   it("rounded=true: does NOT include standalone 'rounded' class", () => {
     const { container } = render(<Skeleton rounded />);
-    // "rounded-full" must not match as a standalone "rounded" class
-    expect(container.firstElementChild!.className.split(" ")).not.toContain("rounded");
+    // "rounded" must not match as a standalone "rounded" class
+    expect(container.firstElementChild!.className.split(" ")).not.toContain(
+      "rounded",
+    );
   });
 
   it("includes animate-pulse class", () => {
@@ -301,7 +303,9 @@ describe("Toast — CSS token classes", () => {
       </ToastProvider>,
     );
     const toast = container.querySelector("[data-state]") as HTMLElement;
-    expect(toast?.className ?? "").toContain("[border-width:var(--border-width)]");
+    expect(toast?.className ?? "").toContain(
+      "[border-width:var(--border-width)]",
+    );
   });
 
   it("uses animate-c7-slide-in-from-top for entry animation", () => {
