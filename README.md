@@ -114,7 +114,7 @@ C7ONE
 │   └── useC7One()            ← getters + setters for all tokens
 │
 ├── Component Layer
-│   ├── Structural            ← Card, Modal, Header, Footer, Drawer, Section
+│   ├── Structural            ← Card, Modal, Header, Footer, Section
 │   ├── Textual               ← H1–H6, Body, Code, Badge, Label, Kbd
 │   ├── Form                  ← Button, Input, Select, Checkbox, Toggle, Slider, Textarea
 │   ├── Data                  ← Table, List, Gallery, DataGrid
@@ -271,7 +271,6 @@ All components are Tailwind-styled wrappers around Radix UI primitives (via shad
 | --------- | ------------ | ----------------------------------------- |
 | `Card`    | `div`        | variants: flat, elevated, outlined, glass |
 | `Modal`   | Radix Dialog | backdrop, close button, header slot       |
-| `Drawer`  | Radix Dialog | slides from edge                          |
 | `Header`  | `div`        | sticky option, logo + nav slots           |
 | `Footer`  | `div`        | link columns slot                         |
 | `Section` | `div`        | max-width container + standard padding    |

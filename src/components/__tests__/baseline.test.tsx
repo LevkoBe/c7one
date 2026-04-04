@@ -27,27 +27,37 @@ import {
   CardFooter,
 } from "../structural/Card";
 import { Modal, ModalContent } from "../structural/Modal";
-import { Drawer, DrawerContent } from "../structural/Drawer";
 import { Header, Footer, Section } from "../structural/Layout";
 
 // ── Textual ───────────────────────────────────────────────────────────────────
 import {
-  H1, H2, H3, H4, H5, H6,
-  Body, Code, Label, Kbd,
+  H1,
+  H2,
+  H3,
+  H4,
+  H5,
+  H6,
+  Body,
+  Code,
+  Label,
+  Kbd,
 } from "../textual/Typography";
 import { Badge } from "../textual/Badge";
 
 // ── Form ──────────────────────────────────────────────────────────────────────
 import { Button } from "../form/Button";
 import { Input } from "../form/Input";
-import {
-  Textarea, Checkbox, Toggle, Slider,
-} from "../form/FormControls";
+import { Textarea, Checkbox, Toggle, Slider } from "../form/FormControls";
 
 // ── Feedback ──────────────────────────────────────────────────────────────────
 import {
-  Alert, Spinner, Progress, Skeleton,
-  Toast, ToastProvider, ToastViewport,
+  Alert,
+  Spinner,
+  Progress,
+  Skeleton,
+  Toast,
+  ToastProvider,
+  ToastViewport,
 } from "../feedback/Feedback";
 
 // ── Visual ────────────────────────────────────────────────────────────────────
@@ -56,7 +66,10 @@ import { Divider, Avatar, A } from "../visual/Visual";
 // ── Navigation ────────────────────────────────────────────────────────────────
 import {
   Breadcrumb,
-  Tabs, TabsList, TabsTrigger, TabsContent,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from "../navigation/Navigation";
 import { Navbar, Sidebar } from "../navigation/NavSidebar";
 
@@ -118,7 +131,9 @@ describe("Card — baseline render inside provider", () => {
     render(
       baseline(
         <Card>
-          <CardHeader><CardTitle>Title</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Title</CardTitle>
+          </CardHeader>
           <CardContent>Body</CardContent>
           <CardFooter>Footer</CardFooter>
         </Card>,
@@ -132,31 +147,33 @@ describe("Card — baseline render inside provider", () => {
   it("Card default (flat) variant: includes bg-bg-elevated class", () => {
     const { container } = render(baseline(<Card />));
     // flat is the default; it uses bg-bg-elevated (slightly raised surface)
-    expect(container.querySelector("div")!.className).toContain("bg-bg-elevated");
+    expect(container.querySelector("div")!.className).toContain(
+      "bg-bg-elevated",
+    );
   });
 });
 
 describe("Modal — baseline render inside provider", () => {
   it("closed Modal does not render content", () => {
-    render(baseline(<Modal open={false}><ModalContent>hidden</ModalContent></Modal>));
+    render(
+      baseline(
+        <Modal open={false}>
+          <ModalContent>hidden</ModalContent>
+        </Modal>,
+      ),
+    );
     expect(screen.queryByText("hidden")).not.toBeInTheDocument();
   });
 
   it("open Modal renders content", () => {
-    render(baseline(<Modal open><ModalContent>open content</ModalContent></Modal>));
+    render(
+      baseline(
+        <Modal open>
+          <ModalContent>open content</ModalContent>
+        </Modal>,
+      ),
+    );
     expect(screen.getByText("open content")).toBeInTheDocument();
-  });
-});
-
-describe("Drawer — baseline render inside provider", () => {
-  it("closed Drawer does not render content", () => {
-    render(baseline(<Drawer open={false}><DrawerContent>hidden</DrawerContent></Drawer>));
-    expect(screen.queryByText("hidden")).not.toBeInTheDocument();
-  });
-
-  it("open Drawer renders content via portal", () => {
-    render(baseline(<Drawer open><DrawerContent>drawer body</DrawerContent></Drawer>));
-    expect(screen.getByText("drawer body")).toBeInTheDocument();
   });
 });
 
@@ -240,7 +257,9 @@ describe("Body, Code, Label, Kbd, Badge — baseline render inside provider", ()
 
 describe("Button — baseline render inside provider", () => {
   it("primary Button renders with bg-accent class", () => {
-    const { container } = render(baseline(<Button variant="primary">Go</Button>));
+    const { container } = render(
+      baseline(<Button variant="primary">Go</Button>),
+    );
     expect(container.querySelector("button")!.className).toContain("bg-accent");
   });
 
@@ -258,7 +277,9 @@ describe("Input — baseline render inside provider", () => {
 
   it("Input error state: has border-error class", () => {
     const { container } = render(baseline(<Input error />));
-    expect(container.querySelector("input")!.className).toContain("border-error");
+    expect(container.querySelector("input")!.className).toContain(
+      "border-error",
+    );
   });
 });
 
@@ -372,10 +393,7 @@ describe("Breadcrumb — baseline render inside provider", () => {
     render(
       baseline(
         <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Page" },
-          ]}
+          items={[{ label: "Home", href: "/" }, { label: "Page" }]}
         />,
       ),
     );
@@ -456,9 +474,7 @@ describe("Table — baseline render inside provider", () => {
 describe("Pagination — baseline render inside provider", () => {
   it("Pagination renders page buttons", () => {
     render(
-      baseline(
-        <Pagination page={1} pageCount={3} onPageChange={() => {}} />,
-      ),
+      baseline(<Pagination page={1} pageCount={3} onPageChange={() => {}} />),
     );
     // Page buttons render their number as content
     expect(screen.getByText("1")).toBeInTheDocument();

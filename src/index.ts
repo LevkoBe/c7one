@@ -43,9 +43,6 @@ export {
   Modal,
   ModalTrigger,
   ModalContent,
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
   Header,
   Footer,
   Section,
@@ -54,8 +51,6 @@ export type {
   CardProps,
   CardVariant,
   ModalProps,
-  DrawerProps,
-  DrawerSide,
   HeaderProps,
   SectionProps,
 } from "./components/structural";

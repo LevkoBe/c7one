@@ -1,5 +1,4 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import React from "react";
 import { describe, expect, it } from "vitest";
 import {
   Card,
@@ -9,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../structural/Card";
-import { Drawer } from "../structural/Drawer";
 import { Header, Footer, Section } from "../structural/Layout";
 import { Modal } from "../structural/Modal";
 
@@ -151,54 +149,6 @@ describe("Modal — open/closed", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
-});
-
-// ─── Drawer ───────────────────────────────────────────────────────────────────
-
-describe("Drawer — open/closed", () => {
-  it("content is absent when closed", () => {
-    render(
-      <Drawer open={false}>
-        <Drawer.Content>Hidden</Drawer.Content>
-      </Drawer>,
-    );
-    expect(screen.queryByText("Hidden")).not.toBeInTheDocument();
-  });
-
-  it("content is present when open", () => {
-    render(
-      <Drawer open={true}>
-        <Drawer.Content>Visible</Drawer.Content>
-      </Drawer>,
-    );
-    expect(screen.getByText("Visible")).toBeInTheDocument();
-  });
-
-  it("close button has aria-label='Close'", () => {
-    render(
-      <Drawer open={true}>
-        <Drawer.Content>Content</Drawer.Content>
-      </Drawer>,
-    );
-    expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
-  });
-});
-
-describe("Drawer — sides", () => {
-  const sides = ["left", "right", "top", "bottom"] as const;
-  for (const side of sides) {
-    it(`side="${side}" includes slide-out-to-${side} class`, () => {
-      render(
-        <Drawer open={true}>
-          <Drawer.Content side={side}>X</Drawer.Content>
-        </Drawer>,
-      );
-      // DrawerContent uses Dialog.Content which has role="dialog".
-      // [data-state="open"] also matches the Overlay — select by role instead.
-      const content = screen.getByRole("dialog") as HTMLElement;
-      expect(content.className).toContain(`slide-out-to-${side}`);
-    });
-  }
 });
 
 // ─── Header ───────────────────────────────────────────────────────────────────
