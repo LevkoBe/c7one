@@ -3,7 +3,7 @@
 // children). Moving divider[i] only affects children[i] and children[i+1].
 // All other panels are completely unaffected — correct VSCode-style behavior.
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { WindowProvider, useWindowContext } from "./WindowContext";
 import type {
   GroupNode,
@@ -18,8 +18,10 @@ import { cn } from "../utils/cn";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const HEADER_H = 32;     // px — matches h-8
-const EDGE_T   = 28;     // px — proximity threshold for showing [+]
+const HEADER_H    = 32;  // px — matches h-8
+const EDGE_T      = 28;  // px — proximity threshold for showing [+]
+const COMPACT_W   = 120; // px — header narrower than this shows only the expand button
+const PANEL_MS    = 220; // ms — collapse / expand / split animation duration
 
 // ─── DynamicPanelRoot ─────────────────────────────────────────────────────────
 
@@ -89,6 +91,17 @@ function DynamicGroup({ node }: { node: GroupNode }) {
   const isH = node.direction === "horizontal";
   const sizes = computeSizes(node.dividerPositions, node.children.length);
 
+  // Track which child IDs have already been rendered so we can detect newly
+  // added panels (from a split) and animate them in from zero.
+  const isFirstRender = useRef(true);
+  const seenIds = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    isFirstRender.current = false;
+    node.children.forEach((c) => seenIds.current.add(c.id));
+  });
+  const isNewChild = (id: string) =>
+    !isFirstRender.current && !seenIds.current.has(id);
+
   // Collapsed panels are always at the end (invariant maintained by collapse/expand ops).
   // They take a fixed HEADER_H px each, so we subtract that from containerSize before
   // computing drag percentages — otherwise moving 1px would shift the divider by more
@@ -136,6 +149,7 @@ function DynamicGroup({ node }: { node: GroupNode }) {
         const prevChild = node.children[i - 1];
         const prevIsCollapsed =
           prevChild?.type === "leaf" && ((prevChild as LeafNode).collapsed ?? false);
+        const targetFlex = isCollapsed ? `0 0 ${HEADER_H}px` : `${sizes[i]} 1 0%`;
         return (
           <React.Fragment key={child.id}>
             {/* No handle adjacent to collapsed panels — they're fixed-size header strips */}
@@ -145,19 +159,74 @@ function DynamicGroup({ node }: { node: GroupNode }) {
                 onStartDrag={startDrag(i - 1)}
               />
             )}
-            <div
-              className={cn("min-w-0 min-h-0 overflow-hidden flex", isH ? "flex-col" : "flex-row")}
-              style={{
-                flex: isCollapsed
-                  ? `0 0 ${HEADER_H}px`
-                  : `${sizes[i]} 1 0%`,
-              }}
+            <PanelSlot
+              isNew={isNewChild(child.id)}
+              targetFlex={targetFlex}
+              innerDirection={isH ? "flex-col" : "flex-row"}
             >
               <TreeNode node={child} />
-            </div>
+            </PanelSlot>
           </React.Fragment>
         );
       })}
+    </div>
+  );
+}
+
+// ─── PanelSlot ────────────────────────────────────────────────────────────────
+//
+// Wraps a single flex child in a DynamicGroup. Applies CSS transitions on
+// flex-grow/flex-basis so collapse, expand, and resize all animate smoothly.
+//
+// For newly split-in panels (isNew=true) the slot starts at flex 0 0 0px and
+// transitions to the real target on the next paint via a double-RAF, matching
+// the shrink animation of the sibling panels.
+
+function PanelSlot({
+  isNew,
+  targetFlex,
+  innerDirection,
+  children,
+}: {
+  isNew: boolean;
+  targetFlex: string;
+  innerDirection: "flex-col" | "flex-row";
+  children: React.ReactNode;
+}) {
+  const [flex, setFlex] = useState(isNew ? "0 0 0px" : targetFlex);
+
+  // Keep flex in sync with external target (collapse/expand changes targetFlex
+  // on subsequent renders while the slot is already mounted).
+  const prevTarget = useRef(targetFlex);
+  if (!isNew && prevTarget.current !== targetFlex) {
+    prevTarget.current = targetFlex;
+    setFlex(targetFlex);
+  }
+
+  useEffect(() => {
+    if (!isNew) return;
+    // Double-RAF: first frame commits the initial 0px style, second frame
+    // triggers the transition to the real size.
+    const id1 = requestAnimationFrame(() => {
+      const id2 = requestAnimationFrame(() => {
+        prevTarget.current = targetFlex;
+        setFlex(targetFlex);
+      });
+      return () => cancelAnimationFrame(id2);
+    });
+    return () => cancelAnimationFrame(id1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      className={cn("min-w-0 min-h-0 overflow-hidden flex", innerDirection)}
+      style={{
+        flex,
+        transition: `flex-grow ${PANEL_MS}ms ease, flex-basis ${PANEL_MS}ms ease`,
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -339,40 +408,71 @@ function DynamicLeafHeader({
   onExpand: () => void;
 }) {
   const isCollapsed = node.collapsed ?? false;
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setCompact(entry.contentRect.width < COMPACT_W);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <div
+      ref={headerRef}
       className={cn(
         "flex items-center gap-2 px-3 h-8 shrink-0",
         "bg-bg-elevated border-b border-border",
         "transition-[background-color,border-color] duration-[var(--transition-speed)]",
+        compact && "justify-center px-1",
       )}
     >
-      {windowDef?.icon && (
+      {!compact && windowDef?.icon && (
         <span className="w-4 h-4 text-fg-muted flex items-center justify-center shrink-0">
           {windowDef.icon}
         </span>
       )}
-      <span className="flex-1 min-w-0 text-xs font-medium text-fg-primary truncate">
-        {windowDef?.title ?? "Select Window"}
-      </span>
+      {!compact && (
+        <span className="flex-1 min-w-0 text-xs font-medium text-fg-primary truncate">
+          {windowDef?.title ?? "Select Window"}
+        </span>
+      )}
       {!isDefault && (
         <div className="flex items-center gap-0.5">
-          <button
-            onClick={isCollapsed ? onExpand : onCollapse}
-            className={headerBtnCls}
-            title={isCollapsed ? "Expand" : "Minimize"}
-            aria-label={isCollapsed ? "Expand panel" : "Minimize panel"}
-          >
-            {isCollapsed ? <ExpandIcon /> : <MinimizeIcon />}
-          </button>
-          <button
-            onClick={onClose}
-            className={headerBtnCls}
-            title="Close panel"
-            aria-label="Close panel"
-          >
-            <CloseIcon />
-          </button>
+          {compact ? (
+            /* Narrow slot: only show expand (if collapsed) or minimize */
+            <button
+              onClick={isCollapsed ? onExpand : onCollapse}
+              className={headerBtnCls}
+              title={isCollapsed ? "Expand" : "Minimize"}
+              aria-label={isCollapsed ? "Expand panel" : "Minimize panel"}
+            >
+              {isCollapsed ? <ExpandIcon /> : <MinimizeIcon />}
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={isCollapsed ? onExpand : onCollapse}
+                className={headerBtnCls}
+                title={isCollapsed ? "Expand" : "Minimize"}
+                aria-label={isCollapsed ? "Expand panel" : "Minimize panel"}
+              >
+                {isCollapsed ? <ExpandIcon /> : <MinimizeIcon />}
+              </button>
+              <button
+                onClick={onClose}
+                className={headerBtnCls}
+                title="Close panel"
+                aria-label="Close panel"
+              >
+                <CloseIcon />
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
