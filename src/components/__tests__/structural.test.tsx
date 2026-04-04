@@ -276,3 +276,38 @@ describe("Section — maxWidth", () => {
     expect(container.querySelector("div")!.className).toContain("max-w-5xl");
   });
 });
+
+// ─── CSS token classes ────────────────────────────────────────────────────────
+// Guards against broken Tailwind v4 arbitrary-value patterns that silently
+// generate invalid CSS (no var() wrapper). See: border-[length:--x],
+// duration-[--x], rounded-radius — all produce non-functional CSS declarations.
+
+describe("Card — CSS token classes", () => {
+  it("uses [border-width:var(--border-width)] for dynamic border", () => {
+    const { container } = render(<Card />);
+    expect(container.firstElementChild!.className).toContain(
+      "[border-width:var(--border-width)]",
+    );
+  });
+
+  it("uses duration-[var(--transition-speed)] for dynamic transition", () => {
+    const { container } = render(<Card />);
+    expect(container.firstElementChild!.className).toContain(
+      "duration-[var(--transition-speed)]",
+    );
+  });
+
+  it("uses 'rounded' (not 'rounded-radius') for dynamic border-radius", () => {
+    const { container } = render(<Card />);
+    const classes = container.firstElementChild!.className.split(" ");
+    expect(classes).toContain("rounded");
+    expect(classes).not.toContain("rounded-radius");
+  });
+
+  it("does not use broken border-[length:--border-width] syntax", () => {
+    const { container } = render(<Card />);
+    expect(container.firstElementChild!.className).not.toContain(
+      "border-[length:--border-width]",
+    );
+  });
+});

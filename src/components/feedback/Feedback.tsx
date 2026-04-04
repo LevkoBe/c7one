@@ -25,7 +25,7 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       ref={ref}
       role="alert"
       className={cn(
-        "rounded-radius border-[length:--border-width] p-4",
+        "rounded [border-width:var(--border-width)] p-4",
         alertVariants[variant],
         className,
       )}
@@ -86,7 +86,7 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       {...props}
     >
       <RadixProgress.Indicator
-        className="h-full bg-accent transition-all duration-transition-speed ease-in-out"
+        className="h-full bg-accent transition-all duration-[var(--transition-speed)] ease-in-out"
         style={{ width: `${((value ?? 0) / (max ?? 100)) * 100}%` }}
       />
     </RadixProgress.Root>
@@ -106,7 +106,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       ref={ref}
       className={cn(
         "animate-pulse bg-bg-overlay",
-        rounded ? "rounded-full" : "rounded-radius",
+        rounded ? "rounded-full" : "rounded",
         className,
       )}
       {...props}
@@ -125,7 +125,7 @@ export const ToastViewport = React.forwardRef<
   <RadixToast.Viewport
     ref={ref}
     className={cn(
-      "fixed bottom-4 right-4 z-100 flex flex-col gap-2 w-80 m-0 list-none outline-none",
+      "fixed top-4 left-1/2 -translate-x-1/2 z-100 flex flex-col gap-2 w-80 m-0 list-none outline-none",
       className,
     )}
     {...props}
@@ -153,12 +153,11 @@ export const Toast = React.forwardRef<HTMLLIElement, ToastProps>(
     <RadixToast.Root
       ref={ref}
       className={cn(
-        "flex flex-col gap-1 rounded-radius p-4",
-        "bg-bg-elevated border-[length:--border-width]",
+        "flex flex-col gap-1 rounded p-4",
+        "bg-bg-elevated [border-width:var(--border-width)]",
         "shadow-xl",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out",
-        "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-0",
-        "data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-right-full",
+        "data-[state=open]:animate-c7-slide-in-from-top",
+        "data-[state=closed]:animate-c7-slide-out-to-top",
         toastVariants[variant],
         className,
       )}

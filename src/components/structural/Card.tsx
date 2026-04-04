@@ -20,8 +20,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={cn(
-        "rounded-radius border-[length:--border-width] p-5",
-        "transition-[background-color,border-color,box-shadow] duration-transition-speed",
+        "rounded [border-width:var(--border-width)] p-5",
+        "transition-[background-color,border-color,box-shadow] duration-[var(--transition-speed)]",
+        "min-h-0 overflow-y-auto",
         variantClasses[variant],
         className,
       )}

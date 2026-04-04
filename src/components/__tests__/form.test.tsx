@@ -332,3 +332,56 @@ describe("Slider", () => {
     expect(screen.getByText("80")).toBeInTheDocument();
   });
 });
+
+// ─── CSS token classes ────────────────────────────────────────────────────────
+// Guards against broken Tailwind v4 arbitrary-value patterns that silently
+// generate invalid CSS. `border-[length:--x]` → `border-width: --x` (no var).
+// `duration-[--x]` → `transition-duration: --x` (no var). Both are browser-ignored.
+
+describe("Button — CSS token classes", () => {
+  it("uses [border-width:var(--border-width)] for dynamic border", () => {
+    const { container } = render(<Button>x</Button>);
+    expect(container.firstElementChild!.className).toContain(
+      "[border-width:var(--border-width)]",
+    );
+  });
+
+  it("uses duration-[var(--transition-speed)] for dynamic transition", () => {
+    const { container } = render(<Button>x</Button>);
+    expect(container.firstElementChild!.className).toContain(
+      "duration-[var(--transition-speed)]",
+    );
+  });
+
+  it("uses 'rounded' (not 'rounded-radius') for dynamic border-radius", () => {
+    const { container } = render(<Button>x</Button>);
+    const classes = container.firstElementChild!.className.split(" ");
+    expect(classes).toContain("rounded");
+    expect(classes).not.toContain("rounded-radius");
+  });
+});
+
+describe("Input — CSS token classes", () => {
+  it("uses [border-width:var(--border-width)] for dynamic border", () => {
+    render(<Input />);
+    expect(screen.getByRole("textbox").className).toContain(
+      "[border-width:var(--border-width)]",
+    );
+  });
+
+  it("uses duration-[var(--transition-speed)] for dynamic transition", () => {
+    render(<Input />);
+    expect(screen.getByRole("textbox").className).toContain(
+      "duration-[var(--transition-speed)]",
+    );
+  });
+});
+
+describe("Toggle — CSS token classes", () => {
+  it("switch root uses duration-[var(--transition-speed)] for transition", () => {
+    render(<Toggle />);
+    expect(screen.getByRole("switch").className).toContain(
+      "duration-[var(--transition-speed)]",
+    );
+  });
+});

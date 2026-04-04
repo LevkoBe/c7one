@@ -83,7 +83,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         className={cn(
           "relative inline-flex items-center justify-center shrink-0 rounded-full overflow-hidden",
           "bg-bg-overlay text-fg-muted font-semibold select-none",
-          "border-[length:--border-width] border-border",
+          "[border-width:var(--border-width)] border-border",
           avatarSizes[size],
           className,
         )}
@@ -115,7 +115,7 @@ export const A = React.forwardRef<
     ref={ref}
     className={cn(
       "text-accent underline-offset-4 hover:underline",
-      "transition-colors duration-transition-speed",
+      "transition-colors duration-[var(--transition-speed)]",
       "hover:text-accent-hover",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm",
       className,

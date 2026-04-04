@@ -14,7 +14,7 @@ export const Header = React.forwardRef<HTMLElement, HeaderProps>(
       className={cn(
         "flex items-center justify-between px-5 h-14",
         "bg-bg-base border-b border-b-border",
-        "transition-[background-color,border-color] duration-transition-speed",
+        "transition-[background-color,border-color] duration-[var(--transition-speed)]",
         sticky && "sticky top-0 z-40",
         className,
       )}
@@ -37,7 +37,7 @@ export const Footer = React.forwardRef<
     className={cn(
       "px-5 py-8 border-t border-t-border",
       "bg-bg-base text-fg-muted",
-      "transition-[background-color,border-color] duration-transition-speed",
+      "transition-[background-color,border-color] duration-[var(--transition-speed)]",
       className,
     )}
     {...props}

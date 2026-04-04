@@ -41,7 +41,7 @@ export function DrawerContent({
       <Dialog.Content
         className={cn(
           "fixed z-50",
-          "bg-bg-elevated border-[length:--border-width] border-border",
+          "bg-bg-elevated [border-width:var(--border-width)] border-border",
           "p-5 shadow-xl",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -52,7 +52,7 @@ export function DrawerContent({
       >
         {children}
         <Dialog.Close
-          className="absolute right-4 top-4 text-fg-muted hover:text-fg-primary transition-colors duration-transition-speed rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="absolute right-4 top-4 text-fg-muted hover:text-fg-primary transition-colors duration-[var(--transition-speed)] rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           aria-label="Close"
         >
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">

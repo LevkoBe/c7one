@@ -164,9 +164,9 @@ describe("Progress — width calculation", () => {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 describe("Skeleton — rounded", () => {
-  it("rounded=false (default): includes rounded-radius class", () => {
+  it("rounded=false (default): includes rounded class", () => {
     const { container } = render(<Skeleton />);
-    expect(container.firstElementChild!.className).toContain("rounded-radius");
+    expect(container.firstElementChild!.className).toContain("rounded");
   });
 
   it("rounded=false: does NOT include rounded-full", () => {
@@ -179,11 +179,10 @@ describe("Skeleton — rounded", () => {
     expect(container.firstElementChild!.className).toContain("rounded-full");
   });
 
-  it("rounded=true: does NOT include rounded-radius", () => {
+  it("rounded=true: does NOT include standalone 'rounded' class", () => {
     const { container } = render(<Skeleton rounded />);
-    expect(container.firstElementChild!.className).not.toContain(
-      "rounded-radius",
-    );
+    // "rounded-full" must not match as a standalone "rounded" class
+    expect(container.firstElementChild!.className.split(" ")).not.toContain("rounded");
   });
 
   it("includes animate-pulse class", () => {
@@ -268,5 +267,90 @@ describe("Toast — content", () => {
       </ToastProvider>,
     );
     expect(screen.queryByText("Hidden")).not.toBeInTheDocument();
+  });
+});
+
+// ─── CSS token classes ────────────────────────────────────────────────────────
+// These guard against regressions where broken Tailwind v4 arbitrary-value
+// syntax (e.g. `border-[length:--x]` or `duration-[--x]`) gets reintroduced.
+// Those patterns generate `border-width: --x` / `transition-duration: --x`
+// (without var()), which the browser ignores entirely.
+
+describe("Alert — CSS token classes", () => {
+  it("uses [border-width:var(--border-width)] for dynamic border", () => {
+    const { container } = render(<Alert />);
+    expect(container.firstElementChild!.className).toContain(
+      "[border-width:var(--border-width)]",
+    );
+  });
+
+  it("does not use broken border-[length:--border-width] syntax", () => {
+    const { container } = render(<Alert />);
+    expect(container.firstElementChild!.className).not.toContain(
+      "border-[length:--border-width]",
+    );
+  });
+});
+
+describe("Toast — CSS token classes", () => {
+  it("uses [border-width:var(--border-width)] for dynamic border", () => {
+    const { container } = render(
+      <ToastProvider>
+        <Toast open />
+        <ToastViewport />
+      </ToastProvider>,
+    );
+    const toast = container.querySelector("[data-state]") as HTMLElement;
+    expect(toast?.className ?? "").toContain("[border-width:var(--border-width)]");
+  });
+
+  it("uses animate-c7-slide-in-from-top for entry animation", () => {
+    const { container } = render(
+      <ToastProvider>
+        <Toast open />
+        <ToastViewport />
+      </ToastProvider>,
+    );
+    const toast = container.querySelector("[data-state]") as HTMLElement;
+    expect(toast?.className ?? "").toContain("animate-c7-slide-in-from-top");
+  });
+
+  it("uses animate-c7-slide-out-to-top for exit animation", () => {
+    const { container } = render(
+      <ToastProvider>
+        <Toast open />
+        <ToastViewport />
+      </ToastProvider>,
+    );
+    const toast = container.querySelector("[data-state]") as HTMLElement;
+    expect(toast?.className ?? "").toContain("animate-c7-slide-out-to-top");
+  });
+
+  it("does not use broken tailwindcss-animate classes", () => {
+    const { container } = render(
+      <ToastProvider>
+        <Toast open />
+        <ToastViewport />
+      </ToastProvider>,
+    );
+    const toast = container.querySelector("[data-state]") as HTMLElement;
+    const cls = toast?.className ?? "";
+    // The broken tailwindcss-animate patterns use bare "animate-in" and
+    // standalone ":slide-in-from-top" (without the "animate-c7-" prefix).
+    expect(cls.split(" ")).not.toContain("animate-in");
+    expect(cls.split(" ")).not.toContain("data-[state=open]:slide-in-from-top");
+  });
+
+  it("viewport is fixed at top-center, not bottom-right", () => {
+    const { container } = render(
+      <ToastProvider>
+        <ToastViewport />
+      </ToastProvider>,
+    );
+    const viewport = container.querySelector("ol") as HTMLElement;
+    expect(viewport?.className ?? "").toContain("top-4");
+    expect(viewport?.className ?? "").toContain("left-1/2");
+    expect(viewport?.className ?? "").not.toContain("bottom-4");
+    expect(viewport?.className ?? "").not.toContain("right-4");
   });
 });

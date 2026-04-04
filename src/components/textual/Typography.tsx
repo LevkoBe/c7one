@@ -117,8 +117,8 @@ export const Code = React.forwardRef<HTMLElement, CodeProps>(
       return (
         <pre
           className={cn(
-            "bg-bg-overlay border-[length:--border-width] border-border",
-            "rounded-radius p-4 overflow-x-auto",
+            "bg-bg-overlay [border-width:var(--border-width)] border-border",
+            "rounded p-4 overflow-x-auto",
             className,
           )}
         >
@@ -176,7 +176,7 @@ export const Kbd = React.forwardRef<
       "inline-flex items-center px-1.5 py-0.5",
       "text-xs font-mono font-medium",
       "bg-bg-overlay text-fg-muted",
-      "border-[length:--border-width] border-border border-b-2",
+      "[border-width:var(--border-width)] border-border border-b-2",
       "rounded-[calc(var(--radius)*0.5)]",
       className,
     )}

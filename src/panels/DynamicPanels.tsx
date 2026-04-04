@@ -177,7 +177,7 @@ function ResizeHandle({
       onMouseDown={onStartDrag}
       className={cn(
         "shrink-0 relative flex items-center justify-center select-none",
-        "bg-transparent hover:bg-accent/20 transition-colors duration-transition-speed",
+        "bg-transparent hover:bg-accent/20 transition-colors duration-[var(--transition-speed)]",
         "focus-visible:outline-none",
         isH ? "w-1 cursor-col-resize" : "h-1 cursor-row-resize",
       )}
@@ -319,7 +319,7 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
 const headerBtnCls = cn(
   "flex items-center justify-center w-5 h-5 rounded-sm",
   "text-fg-muted hover:text-fg-primary hover:bg-bg-overlay",
-  "transition-[color,background-color] duration-transition-speed",
+  "transition-[color,background-color] duration-[var(--transition-speed)]",
   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
 );
 
@@ -344,7 +344,7 @@ function DynamicLeafHeader({
       className={cn(
         "flex items-center gap-2 px-3 h-8 shrink-0",
         "bg-bg-elevated border-b border-border",
-        "transition-[background-color,border-color] duration-transition-speed",
+        "transition-[background-color,border-color] duration-[var(--transition-speed)]",
       )}
     >
       {windowDef?.icon && (
