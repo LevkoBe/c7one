@@ -66,6 +66,11 @@ export interface C7OneContextValue {
   tokens: Record<string, string>;
   setToken: (name: string, value: string) => void;
   injectTokens: (tokens: Record<string, string>) => void;
+
+  /** Flat map of every active token by CSS var name. */
+  getAllTokens: () => Record<string, string>;
+  /** Set any token by CSS var name — routes to the correct typed setter internally. */
+  setTokenValue: (name: string, value: string) => void;
 }
 
 // ─── Mode Preset ──────────────────────────────────────────────────────────────

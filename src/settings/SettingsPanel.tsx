@@ -10,14 +10,8 @@ import { Button } from "../components/form/Button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type SettingKey =
-  | "colors"
-  | "mode"
-  | "shape.radius"
-  | "shape.borderWidth"
-  | "motion.transitionSpeed"
-  | "depth.shadowIntensity"
-  | `tokens.${string}`;
+/** 'mode' and 'colors' are special preset controls; any '--*' is a CSS var name. */
+export type SettingKey = "mode" | "colors" | `--${string}`;
 
 export interface SettingsPanelProps {
   expose?: SettingKey[];
@@ -25,40 +19,121 @@ export interface SettingsPanelProps {
   className?: string;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Inference ────────────────────────────────────────────────────────────────
+
+type ControlType = "color" | "slider" | "text";
+
+function inferControl(name: string, value: string): ControlType {
+  if (name.includes("color")) return "color";
+  if (/^-?\d*\.?\d+(rem|px|em|ms|s|%)/.test(value.trim())) return "slider";
+  if (/^-?\d*\.?\d+$/.test(value.trim())) return "slider";
+  return "text";
+}
+
+type SliderDef = {
+  min: number;
+  max: number;
+  step: number;
+  format: (n: number) => string;
+};
+
+function inferSlider(value: string): SliderDef {
+  const v = value.trim();
+  if (v.endsWith("rem"))
+    return { min: 0, max: 3, step: 0.01, format: (n) => `${n.toFixed(2)}rem` };
+  if (v.endsWith("px"))
+    return { min: 0, max: 20, step: 1, format: (n) => `${Math.round(n)}px` };
+  if (v.endsWith("ms"))
+    return { min: 0, max: 2000, step: 10, format: (n) => `${Math.round(n)}ms` };
+  if (v.endsWith("s"))
+    return { min: 0, max: 10, step: 0.1, format: (n) => `${n.toFixed(1)}s` };
+  if (v.endsWith("%"))
+    return { min: 0, max: 100, step: 1, format: (n) => `${Math.round(n)}%` };
+  // bare number
+  return { min: 0, max: 20, step: 0.1, format: (n) => `${n.toFixed(1)}` };
+}
+
+/** Groups a CSS var by its first name segment: '--color-bg-base' → 'color' */
+function inferGroup(name: string): string {
+  const m = /^--([a-z]+)/.exec(name);
+  return m ? m[1] : "other";
+}
+
+// ─── Theme list — derived from the themes index, never hardcoded ──────────────
+
+const BUILT_IN_THEMES = (
+  Object.entries(themes) as [string, ThemeTokens][]
+).map(([id, tokens]) => ({ id, tokens }));
 
 const MODES: DesignMode[] = ["classic", "neo", "glass", "minimal"];
 
-const BUILT_IN_THEMES: { id: string; tokens: ThemeTokens }[] = [
-  { id: "dark", tokens: themes.dark },
-  { id: "light", tokens: themes.light },
-  { id: "midnight", tokens: themes.midnight },
-  { id: "forest", tokens: themes.forest },
-  { id: "rose", tokens: themes.rose },
-  { id: "slate", tokens: themes.slate },
-];
+// ─── Token Control ────────────────────────────────────────────────────────────
 
-const COLOR_TOKENS = [
-  "--color-bg-base",
-  "--color-bg-elevated",
-  "--color-bg-overlay",
-  "--color-fg-primary",
-  "--color-fg-muted",
-  "--color-fg-disabled",
-  "--color-accent",
-  "--color-accent-hover",
-  "--color-success",
-  "--color-warning",
-  "--color-error",
-  "--color-border",
-] as const;
+function TokenControl({
+  name,
+  value,
+  onChange,
+}: {
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const control = inferControl(name, value);
+  const label = name.replace(/^--/, "");
 
-function isExposed(expose: SettingKey[] | undefined, key: SettingKey): boolean {
-  if (!expose) return true;
-  return expose.includes(key);
+  if (control === "color") {
+    const safeHex = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-[10px] text-fg-muted truncate flex-1" title={name}>
+          {label}
+        </Label>
+        <input
+          type="color"
+          value={safeHex}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-6 w-8 rounded cursor-pointer border-0 bg-transparent p-0"
+          title={name}
+        />
+      </div>
+    );
+  }
+
+  if (control === "slider") {
+    const { min, max, step, format } = inferSlider(value);
+    const num = parseFloat(value) || 0;
+    return (
+      <div>
+        <Label className="text-xs text-fg-muted mb-1.5 block">
+          {label} — {value}
+        </Label>
+        <Slider
+          min={min}
+          max={max}
+          step={step}
+          value={[num]}
+          onValueChange={([v]) => onChange(format(v))}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Label className="text-[10px] text-fg-muted truncate flex-1" title={name}>
+        {label}
+      </Label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-6 w-24 text-xs bg-bg-elevated border border-border rounded px-1.5 text-fg-primary"
+      />
+    </div>
+  );
 }
 
-// ─── Section wrapper ─────────────────────────────────────────────────────────
+// ─── Section wrapper ──────────────────────────────────────────────────────────
 
 function SettingsSection({
   title,
@@ -84,22 +159,28 @@ export function SettingsPanel({
   renderAppSettings,
   className,
 }: SettingsPanelProps) {
-  const {
-    mode,
-    setMode,
-    colors,
-    setColors,
-    shape,
-    setShape,
-    motion,
-    setMotion,
-    depth,
-    setDepth,
-  } = useC7One();
+  const ctx = useC7One();
+  const allTokens = ctx.getAllTokens();
 
-  // Parse radius numeric value for slider (strips 'rem')
-  const radiusNum = parseFloat(shape.radius) || 0.375;
-  const speedNum = parseInt(motion.transitionSpeed) || 200;
+  // Default: mode + color swatches only. Devs add more via expose.
+  const keys: SettingKey[] = expose ?? ["mode", "colors"];
+
+  const showMode = keys.includes("mode");
+  const showColors = keys.includes("colors");
+
+  // Collect token keys. When 'colors' is showing, skip --color-* to avoid
+  // duplicating what the swatches already cover.
+  const tokenKeys = keys.filter(
+    (k): k is `--${string}` =>
+      k.startsWith("--") && (!showColors || !k.startsWith("--color-")),
+  );
+
+  // Group token keys by first CSS var segment for visual sections
+  const groupMap: Record<string, `--${string}`[]> = {};
+  for (const k of tokenKeys) {
+    const g = inferGroup(k);
+    (groupMap[g] ??= []).push(k);
+  }
 
   return (
     <Card
@@ -109,15 +190,15 @@ export function SettingsPanel({
       <p className="text-sm font-semibold text-fg-primary mb-5">Settings</p>
 
       {/* ── Design Mode ──────────────────────────────────────────────── */}
-      {isExposed(expose, "mode") && (
+      {showMode && (
         <SettingsSection title="Design Mode">
           <div className="grid grid-cols-2 gap-1.5">
             {MODES.map((m) => (
               <Button
                 key={m}
                 size="sm"
-                variant={mode === m ? "primary" : "secondary"}
-                onClick={() => setMode(m)}
+                variant={ctx.mode === m ? "primary" : "secondary"}
+                onClick={() => ctx.setMode(m)}
                 className="capitalize"
               >
                 {m}
@@ -127,21 +208,20 @@ export function SettingsPanel({
         </SettingsSection>
       )}
 
-      {/* ── Color Themes ──────────────────────────────────────────────── */}
-      {isExposed(expose, "colors") && (
+      {/* ── Theme swatches + individual color pickers ─────────────── */}
+      {showColors && (
         <SettingsSection title="Theme">
           <div className="flex flex-wrap gap-2">
             {BUILT_IN_THEMES.map((t) => (
               <button
                 key={t.id}
                 title={t.id}
-                onClick={() => setColors(t.tokens)}
+                onClick={() => ctx.setColors(t.tokens)}
                 className={cn(
                   "group flex flex-col items-center gap-1 cursor-pointer",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm",
                 )}
               >
-                {/* mini swatch */}
                 <span
                   className="block w-7 h-7 rounded-[calc(var(--radius)*0.75)] border border-white/10"
                   style={{ background: t.tokens["--color-accent"] }}
@@ -153,111 +233,36 @@ export function SettingsPanel({
             ))}
           </div>
 
-          {/* Individual color pickers */}
           <div className="mt-3 space-y-2">
-            {COLOR_TOKENS.map((token) => (
-              <div
+            {(Object.keys(ctx.colors) as (keyof ThemeTokens)[]).map((token) => (
+              <TokenControl
                 key={token}
-                className="flex items-center justify-between gap-2"
-              >
-                <Label
-                  className="text-[10px] text-fg-muted truncate flex-1"
-                  title={token}
-                >
-                  {token.replace("--color-", "")}
-                </Label>
-                <input
-                  type="color"
-                  value={colors[token as keyof ThemeTokens] ?? "#000000"}
-                  onChange={(e) =>
-                    setColors({
-                      [token]: e.target.value,
-                    } as Partial<ThemeTokens>)
-                  }
-                  className="h-6 w-8 rounded cursor-pointer border-0 bg-transparent p-0"
-                  title={token}
-                />
-              </div>
+                name={token}
+                value={ctx.colors[token]}
+                onChange={(v) => ctx.setTokenValue(token, v)}
+              />
             ))}
           </div>
         </SettingsSection>
       )}
 
-      {/* ── Shape ─────────────────────────────────────────────────────── */}
-      {(isExposed(expose, "shape.radius") ||
-        isExposed(expose, "shape.borderWidth")) && (
-        <SettingsSection title="Shape">
-          {isExposed(expose, "shape.radius") && (
-            <div className="mb-3">
-              <Label className="text-xs text-fg-muted mb-1.5 block">
-                Radius — {radiusNum.toFixed(2)}rem
-              </Label>
-              <Slider
-                min={0}
-                max={200}
-                step={1}
-                value={[Math.round(radiusNum * 100)]}
-                onValueChange={([v]) =>
-                  setShape({ radius: `${(v / 100).toFixed(2)}rem` })
-                }
+      {/* ── Token groups (shape, motion, custom, …) ──────────────── */}
+      {Object.entries(groupMap).map(([group, groupKeys]) => (
+        <SettingsSection key={group} title={group}>
+          <div className="space-y-2">
+            {groupKeys.map((name) => (
+              <TokenControl
+                key={name}
+                name={name}
+                value={allTokens[name] ?? ""}
+                onChange={(v) => ctx.setTokenValue(name, v)}
               />
-            </div>
-          )}
-          {isExposed(expose, "shape.borderWidth") && (
-            <div>
-              <Label className="text-xs text-fg-muted mb-1.5 block">
-                Border — {shape.borderWidth}
-              </Label>
-              <div className="flex gap-1.5">
-                {["0px", "1px", "2px", "3px"].map((w) => (
-                  <Button
-                    key={w}
-                    size="sm"
-                    variant={shape.borderWidth === w ? "primary" : "secondary"}
-                    onClick={() => setShape({ borderWidth: w })}
-                  >
-                    {w}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
+            ))}
+          </div>
         </SettingsSection>
-      )}
+      ))}
 
-      {/* ── Motion ────────────────────────────────────────────────────── */}
-      {isExposed(expose, "motion.transitionSpeed") && (
-        <SettingsSection title="Motion">
-          <Label className="text-xs text-fg-muted mb-1.5 block">
-            Speed — {speedNum}ms
-          </Label>
-          <Slider
-            min={0}
-            max={1000}
-            step={10}
-            value={[speedNum]}
-            onValueChange={([v]) => setMotion({ transitionSpeed: `${v}ms` })}
-          />
-        </SettingsSection>
-      )}
-
-      {/* ── Depth ─────────────────────────────────────────────────────── */}
-      {isExposed(expose, "depth.shadowIntensity") && (
-        <SettingsSection title="Depth">
-          <Label className="text-xs text-fg-muted mb-1.5 block">
-            Shadow — {depth.shadowIntensity.toFixed(1)}
-          </Label>
-          <Slider
-            min={0}
-            max={20}
-            step={1}
-            value={[Math.round(depth.shadowIntensity * 10)]}
-            onValueChange={([v]) => setDepth({ shadowIntensity: v / 10 })}
-          />
-        </SettingsSection>
-      )}
-
-      {/* ── App-specific settings slot ─────────────────────────────────── */}
+      {/* ── App-specific settings slot ─────────────────────────────── */}
       {renderAppSettings && (
         <SettingsSection title="App Settings">
           {renderAppSettings()}

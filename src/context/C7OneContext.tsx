@@ -196,6 +196,37 @@ export function C7OneProvider({
     setTokensState((prev) => ({ ...prev, ...next }));
   }, []);
 
+  const getAllTokens = useCallback(
+    (): Record<string, string> => ({
+      ...(colors as unknown as Record<string, string>),
+      "--radius": shape.radius,
+      "--border-width": shape.borderWidth,
+      "--transition-speed": motion.transitionSpeed,
+      "--shadow-intensity": String(depth.shadowIntensity),
+      ...tokens,
+    }),
+    [colors, shape, motion, depth, tokens],
+  );
+
+  const setTokenValue = useCallback(
+    (name: string, value: string) => {
+      if (name in colors) {
+        setColors({ [name]: value } as Partial<ThemeTokens>);
+      } else if (name === "--radius") {
+        setShape({ radius: value });
+      } else if (name === "--border-width") {
+        setShape({ borderWidth: value });
+      } else if (name === "--transition-speed") {
+        setMotion({ transitionSpeed: value });
+      } else if (name === "--shadow-intensity") {
+        setDepth({ shadowIntensity: parseFloat(value) });
+      } else {
+        setToken(name, value);
+      }
+    },
+    [colors, setColors, setShape, setMotion, setDepth, setToken],
+  );
+
   const value = useMemo<C7OneContextValue>(
     () => ({
       mode,
@@ -211,6 +242,8 @@ export function C7OneProvider({
       tokens,
       setToken,
       injectTokens,
+      getAllTokens,
+      setTokenValue,
     }),
     [
       mode,
@@ -226,6 +259,8 @@ export function C7OneProvider({
       tokens,
       setToken,
       injectTokens,
+      getAllTokens,
+      setTokenValue,
     ],
   );
 
