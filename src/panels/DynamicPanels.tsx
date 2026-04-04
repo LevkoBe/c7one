@@ -3,7 +3,7 @@
 // children). Moving divider[i] only affects children[i] and children[i+1].
 // All other panels are completely unaffected — correct VSCode-style behavior.
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { WindowProvider, useWindowContext } from "./WindowContext";
 import type {
   GroupNode,
@@ -18,8 +18,8 @@ import { cn } from "../utils/cn";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const HEADER_H = 32; // px — matches h-8
-const EDGE_T = 28; // px — proximity threshold for showing [+]
+const HEADER_H = 32;  // px — matches h-8
+const EDGE_T = 28;   // px — proximity threshold for showing [+]
 const COMPACT_W = 120; // px — header narrower than this shows only the expand button
 // When splitting a large panel the new panel should feel like a side-panel, not
 // half the screen. Use min(DEFAULT_SPLIT_PX, 50% of slot) so small panels still
@@ -42,12 +42,6 @@ export function DynamicPanelRoot({
   storageKey,
   className,
 }: DynamicPanelRootProps) {
-export function DynamicPanelRoot({
-  windows,
-  layout,
-  storageKey,
-  className,
-}: DynamicPanelRootProps) {
   return (
     <WindowProvider windows={windows} layout={layout} storageKey={storageKey}>
       <DynamicPanelInner className={className} />
@@ -57,17 +51,36 @@ export function DynamicPanelRoot({
 
 function DynamicPanelInner({ className }: { className?: string }) {
   const { tree } = useWindowContext();
+  const prevTreeRef = useRef(tree);
+
+  // Detect root leaf → group transition (the very first split in the layout).
+  // Identify the new empty leaf so the child DynamicGroup can animate it in.
+  let rootNewLeafId: string | undefined;
+  if (tree.type === "group" && prevTreeRef.current.type === "leaf") {
+    const origLeafId = prevTreeRef.current.id;
+    const newLeaf = tree.children.find(
+      (c) => c.type === "leaf" && c.id !== origLeafId,
+    );
+    rootNewLeafId = newLeaf?.id;
+  }
+  // Update after commit, not during render — mutating a ref during render
+  // breaks Strict Mode because the render function runs twice and the second
+  // invocation sees the already-updated ref, losing the leaf→group detection.
+  useLayoutEffect(() => {
+    prevTreeRef.current = tree;
+  });
+
   return (
     <div className={cn("flex flex-col w-full h-full", className)}>
-      <TreeNode node={tree} />
+      <TreeNode node={tree} newLeafId={rootNewLeafId} />
     </div>
   );
 }
 
 // ─── TreeNode ─────────────────────────────────────────────────────────────────
 
-function TreeNode({ node }: { node: PanelTreeNode }) {
-  if (node.type === "group") return <DynamicGroup node={node} />;
+function TreeNode({ node, newLeafId }: { node: PanelTreeNode; newLeafId?: string }) {
+  if (node.type === "group") return <DynamicGroup node={node} newLeafId={newLeafId} />;
   return (
     <div className="flex flex-col w-full h-full min-h-0">
       <LeafContent node={node} />
@@ -99,7 +112,7 @@ function computeSizes(dividerPositions: number[], n: number): number[] {
   return sizes;
 }
 
-function DynamicGroup({ node }: { node: GroupNode }) {
+function DynamicGroup({ node, newLeafId }: { node: GroupNode; newLeafId?: string }) {
   const { moveDivider } = useWindowContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const isH = node.direction === "horizontal";
@@ -113,13 +126,30 @@ function DynamicGroup({ node }: { node: GroupNode }) {
     isFirstRender.current = false;
     node.children.forEach((c) => seenIds.current.add(c.id));
   });
+
   // A GroupNode child is never "new" in the entrance-animation sense — it is
   // always a replacement for a leaf that was wrapped in a perpendicular group.
   // Animating it from 0 would re-play the width/height the slot already has.
-  const isNewChild = (child: PanelTreeNode) =>
-    child.type === "leaf" &&
-    !isFirstRender.current &&
-    !seenIds.current.has(child.id);
+  //
+  // When newLeafId is provided (root-leaf→group split, or cross-direction split)
+  // the isFirstRender guard is bypassed: only the specific new leaf animates in,
+  // the original leaf that was already visible does not.
+  const isNewChild = (child: PanelTreeNode): boolean => {
+    if (child.type !== "leaf") return false;
+    if (newLeafId !== undefined) return child.id === newLeafId;
+    return !isFirstRender.current && !seenIds.current.has(child.id);
+  };
+
+  // For a GroupNode child that just appeared (cross-direction split), find the
+  // new empty leaf inside it — the one whose ID is not in this group's seenIds.
+  // Passing it down lets the child DynamicGroup animate only that leaf.
+  const getChildNewLeafId = (child: PanelTreeNode): string | undefined => {
+    if (child.type !== "group") return undefined;
+    if (isFirstRender.current || seenIds.current.has(child.id)) return undefined;
+    const origChild = child.children.find((c) => seenIds.current.has(c.id));
+    if (!origChild) return undefined;
+    return child.children.find((c) => c.id !== origChild.id && c.type === "leaf")?.id;
+  };
 
   // Collapsed panels are always at the end (invariant maintained by collapse/expand ops).
   // They take a fixed HEADER_H px each, so we subtract that from containerSize before
@@ -166,15 +196,8 @@ function DynamicGroup({ node }: { node: GroupNode }) {
       {node.children.map((child, i) => {
         const isCollapsed =
           child.type === "leaf" && ((child as LeafNode).collapsed ?? false);
-        const isCollapsed =
-          child.type === "leaf" && ((child as LeafNode).collapsed ?? false);
         const prevChild = node.children[i - 1];
         const prevIsCollapsed =
-          prevChild?.type === "leaf" &&
-          ((prevChild as LeafNode).collapsed ?? false);
-        const targetFlex = isCollapsed
-          ? `0 0 ${HEADER_H}px`
-          : `${sizes[i]} 1 0%`;
           prevChild?.type === "leaf" &&
           ((prevChild as LeafNode).collapsed ?? false);
         const targetFlex = isCollapsed
@@ -194,7 +217,7 @@ function DynamicGroup({ node }: { node: GroupNode }) {
               targetFlex={targetFlex}
               innerDirection={isH ? "flex-col" : "flex-row"}
             >
-              <TreeNode node={child} />
+              <TreeNode node={child} newLeafId={getChildNewLeafId(child)} />
             </PanelSlot>
           </React.Fragment>
         );
@@ -255,8 +278,6 @@ function PanelSlot({
         flex,
         transition:
           "flex-grow var(--transition-speed) ease, flex-basis var(--transition-speed) ease",
-        transition:
-          "flex-grow var(--transition-speed) ease, flex-basis var(--transition-speed) ease",
       }}
     >
       {children}
@@ -286,7 +307,6 @@ function ResizeHandle({
     >
       <div
         className={cn(
-          "bg-border rounded pointer-events-none",
           "bg-border rounded pointer-events-none",
           isH ? "w-px h-8" : "h-px w-8",
         )}
@@ -326,20 +346,13 @@ function LeafContent({ node }: { node: LeafNode }) {
       setHoveredEdge(null);
       return;
     }
-    if (y < HEADER_H) {
-      setHoveredEdge(null);
-      return;
-    }
 
     const cy = y - HEADER_H;
     const ch = h - HEADER_H;
 
     const candidates = [
       { edge: "top" as const, dist: cy },
-      { edge: "top" as const, dist: cy },
       { edge: "bottom" as const, dist: ch - cy },
-      { edge: "left" as const, dist: x },
-      { edge: "right" as const, dist: w - x },
       { edge: "left" as const, dist: x },
       { edge: "right" as const, dist: w - x },
     ];
@@ -416,10 +429,7 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
 
   const posCls = {
     top: "top-9 left-1/2 -translate-x-1/2",
-    top: "top-9 left-1/2 -translate-x-1/2",
     bottom: "bottom-1 left-1/2 -translate-x-1/2",
-    left: "left-1 top-1/2 -translate-y-1/2",
-    right: "right-1 top-1/2 -translate-y-1/2",
     left: "left-1 top-1/2 -translate-y-1/2",
     right: "right-1 top-1/2 -translate-y-1/2",
   }[edge];
@@ -428,7 +438,6 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
     <button
       onClick={() => onSplit(direction, position)}
       className={cn(
-        "absolute z-20 w-5 h-5 rounded [border-width:var(--border-width)] border-transparent",
         "absolute z-20 w-5 h-5 rounded [border-width:var(--border-width)] border-transparent",
         "bg-accent text-bg-base",
         "flex items-center justify-center",
@@ -557,37 +566,11 @@ function PlusIcon() {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M5 2v6M2 5h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
     </svg>
   );
 }
 function MinimizeIcon() {
   return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 5h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
     <svg
       width="10"
       height="10"
@@ -619,37 +602,11 @@ function ExpandIcon() {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 3.5h6M2 6.5h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
     </svg>
   );
 }
 function CloseIcon() {
   return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2.5 2.5l5 5M7.5 2.5l-5 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
     <svg
       width="10"
       height="10"
