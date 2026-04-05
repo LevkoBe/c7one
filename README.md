@@ -120,7 +120,8 @@ C7ONE
 │   ├── Data                  ← Table, List, Gallery, DataGrid
 │   ├── Navigation            ← Navbar, Sidebar, Tabs, Breadcrumb
 │   ├── Feedback              ← Toast, Alert, Spinner, Progress, Skeleton
-│   └── Visual                ← Divider, Avatar, A, custom scrollbar (CSS)
+│   ├── Visual                ← Divider, Avatar, A, custom scrollbar (CSS)
+│   └── Controls              ← RandomizeButton, ThemeToggleButton
 │
 ├── Layout Layer (Canvas)
 │   ├── Static panels         ← PanelRoot, PanelSplit, PanelLeaf
@@ -133,6 +134,11 @@ C7ONE
 ├── i18n Layer
 │   ├── I18nProvider          ← locale state + t() function
 │   └── useI18n()             ← locale, setLocale, t()
+│
+├── Utils
+│   ├── cn()                  ← clsx + tailwind-merge helper
+│   ├── detectIsDark()        ← perceived-luminance dark/light detection
+│   └── buildRandomConfig()   ← random full-theme generator with freedom control
 │
 └── AppConfig Layer
     └── AppConfigProvider     ← per-app typed config (generic, not in shared lib)
@@ -391,7 +397,88 @@ A convenience component — renders a small settings icon button that opens the 
 
 The panel and button are themselves C7ONE components, fully styled by the token system, droppable into a `PanelLeaf` or rendered anywhere.
 
-## 10. Canvas — Static Panel System
+## 10. Controls
+
+Opinionated, ready-to-use buttons that wire directly into `useC7One()`. Drop them into any app header, toolbar, or settings panel — no manual context plumbing needed.
+
+### `RandomizeButton`
+
+Generates and applies a fully random theme configuration on click. Uses `buildRandomConfig` + `detectIsDark` internally and calls all the C7ONE setters automatically.
+
+```tsx
+// Icon-only (default)
+<RandomizeButton freedom={50} />
+
+// With custom label
+<RandomizeButton freedom={20} label="Tame" variant="secondary" size="sm" />
+
+// React to the generated config (e.g. to sync local state)
+<RandomizeButton
+  freedom={100}
+  variant="destructive"
+  onApply={(cfg) => setMyMode(cfg.mode)}
+/>
+```
+
+#### Props
+
+| Prop       | Type                             | Default | Description                                              |
+| ---------- | -------------------------------- | ------- | -------------------------------------------------------- |
+| `freedom`  | `number` (0–100)                 | `20`    | How chaotic the output is. 0 = coherent, 100 = full chaos |
+| `onApply`  | `(cfg: RandomizedConfig) => void` | —       | Called after the config is applied                       |
+| `label`    | `ReactNode`                      | —       | Optional text after the icon. Omit for icon-only         |
+| ...        | `ButtonProps`                    | —       | All `Button` props (`variant`, `size`, `disabled`, etc.) |
+
+### `ThemeToggleButton`
+
+Toggles between two provided `ThemeTokens` configs. Detects the current state via perceived luminance and shows a Sun or Moon icon accordingly.
+
+```tsx
+import { dark, light } from "@levkobe/c7one";
+
+// Icon-only toggle
+<ThemeToggleButton dark={dark} light={light} variant="ghost" size="sm" />
+
+// Custom icons
+<ThemeToggleButton
+  dark={dark}
+  light={light}
+  darkIcon={<SunIcon />}   // shown when current theme is dark (→ click goes light)
+  lightIcon={<MoonIcon />} // shown when current theme is light (→ click goes dark)
+/>
+```
+
+#### Props
+
+| Prop        | Type          | Default       | Description                                             |
+| ----------- | ------------- | ------------- | ------------------------------------------------------- |
+| `dark`      | `ThemeTokens` | **required**  | Colors applied when switching to dark                   |
+| `light`     | `ThemeTokens` | **required**  | Colors applied when switching to light                  |
+| `darkIcon`  | `ReactNode`   | `<Sun />`     | Icon shown when the current theme is dark               |
+| `lightIcon` | `ReactNode`   | `<Moon />`    | Icon shown when the current theme is light              |
+| ...         | `ButtonProps` | —             | All `Button` props (`variant`, `size`, `disabled`, etc.) |
+
+### Color utils
+
+The underlying utilities are also exported for use outside of the pre-built buttons:
+
+```ts
+import { detectIsDark, buildRandomConfig } from "@levkobe/c7one";
+import type { RandomizedConfig } from "@levkobe/c7one";
+
+// Check if a hex color reads as dark
+const isDark = detectIsDark(colors["--color-bg-base"]); // true / false
+
+// Build a random config
+const cfg: RandomizedConfig = buildRandomConfig(isDark, 60);
+// cfg.colors, cfg.mode, cfg.radius, cfg.borderWidth, cfg.transitionSpeed, cfg.shadowIntensity
+```
+
+`buildRandomConfig(isDark, freedom)`:
+- **`isDark`** — whether to generate a dark-mode or light-mode palette (lightness ranges are always role-appropriate)
+- **`freedom`** — 0–100 integer. At `0`: coherent palette with shared hue groups and constrained saturation. At `100`: every token gets an independent random hue and saturation.
+
+## 11. Canvas — Static Panel System
 
 The **Canvas** principle made concrete. Inspired by VSCode's editor layout, the static layout is a binary tree of splits and content slots — ideal for fixed app layouts declared at design time.
 
@@ -430,7 +517,7 @@ Features: drag-to-resize handles, optional persisted ratios via `storageKey` on 
 const { visible, show, hide, toggle } = usePanelVisibility("sidebar");
 ```
 
-## 11. Canvas — Dynamic Panel System
+## 12. Canvas — Dynamic Panel System
 
 For app shells where users control the layout at runtime (add panels, split them, close them, assign content) — like a dashboard or multi-document editor.
 
@@ -502,7 +589,7 @@ const {
 
 The dynamic system uses plain CSS flex with custom drag handles — no `react-resizable-panels` dependency. Moving a divider only affects the two adjacent panels; all others are unaffected.
 
-## 12. i18n
+## 13. i18n
 
 C7ONE ships a lightweight i18n layer used internally by `SettingsPanel` and `DataGrid`. You can extend it with your own app strings using the same `t()` hook.
 
@@ -555,7 +642,7 @@ Pass your own per-locale string maps via `messages`:
 | `messages`      | `Partial<Record<Locale, Record<string, string>>>` | `{}`    | App-specific strings merged on top of lib messages |
 | `storageKey`    | `string`                                          | —       | localStorage key for persisting the locale         |
 
-## 13. AppConfig Layer
+## 14. AppConfig Layer
 
 Per-app config for things that have nothing to do with the shared library — like node colors in DigraVinci or category settings in SkillTracker. Fully typed via generics, completely isolated from C7ONE's own config.
 
@@ -575,7 +662,7 @@ const config = useAppConfig<DigraVinciConfig>();
 
 App-specific logic never bleeds into the shared library.
 
-## 14. File Structure
+## 15. File Structure
 
 ```
 c7one/
@@ -598,7 +685,8 @@ c7one/
 │   │   ├── data/                  ← Table, List, Gallery, DataGrid
 │   │   ├── feedback/              ← Toast, Alert, Spinner, Progress, Skeleton
 │   │   ├── visual/                ← Divider, Avatar, A
-│   │   └── navigation/            ← Navbar, Sidebar, Tabs, Breadcrumb
+│   │   ├── navigation/            ← Navbar, Sidebar, Tabs, Breadcrumb
+│   │   └── controls/              ← RandomizeButton, ThemeToggleButton
 │   │
 │   ├── panels/
 │   │   ├── Panels.tsx             ← PanelRoot, PanelSplit, PanelLeaf (static)
@@ -617,7 +705,8 @@ c7one/
 │   │       └── uk.ts
 │   │
 │   ├── utils/
-│   │   └── cn.ts                  ← cn() (clsx + tailwind-merge)
+│   │   ├── cn.ts                  ← cn() (clsx + tailwind-merge)
+│   │   └── colors.ts              ← detectIsDark(), buildRandomConfig(), RandomizedConfig
 │   │
 │   └── index.ts                   ← public exports
 │
@@ -630,7 +719,7 @@ c7one/
 └── package.json
 ```
 
-## 15. c7one-sandbox
+## 16. c7one-sandbox
 
 A companion app — the interactive showcase and component explorer for C7ONE.
 
@@ -640,8 +729,9 @@ A companion app — the interactive showcase and component explorer for C7ONE.
 
 - Live `SettingsPanel` with all CCC params exposed — every token, every mode
 - Component gallery — every component rendered with the current theme/mode applied
-- "Randomize" button — picks a random theme, mode, shuffles shape/motion tokens, rebuilds the gallery so you can see the full range of what's possible
+- Three `RandomizeButton`s at fixed freedom levels — **Tame** (20%), **Balanced** (50%), **Chaos** (100%) — demonstrating the full range from coherent to maximally random; keyboard shortcut `R` triggers the balanced one
+- `ThemeToggleButton` — one-click dark/light switch
 - "Reset" button — returns to defaults
-- Per-component `className` override input — lets you test Tailwind override behavior live
+- Locale switcher — `en` / `uk`
 
 The sandbox is itself built with C7ONE, so it also serves as a real-world reference implementation.
