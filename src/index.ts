@@ -31,6 +31,8 @@ export { usePanelVisibility } from "./context/PanelContext";
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 export { cn } from "./utils/cn";
+export { detectIsDark, buildRandomConfig } from "./utils/colors";
+export type { RandomizedConfig } from "./utils/colors";
 
 // ─── Structural Components ────────────────────────────────────────────────────
 export {
@@ -197,6 +199,10 @@ export type {
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 export { SettingsPanel, SettingsModalButton } from "./settings/SettingsPanel";
 export type { SettingsPanelProps, SettingKey, SettingsPreset, SettingsModalButtonProps } from "./settings/SettingsPanel";
+
+// ─── Controls ────────────────────────────────────────────────────────────────
+export { RandomizeButton, ThemeToggleButton } from "./components/controls";
+export type { RandomizeButtonProps, ThemeToggleButtonProps } from "./components/controls";
 
 // ─── Localization (i18n) ──────────────────────────────────────────────────────
 export { I18nProvider, useI18n } from "./i18n/I18nContext";
