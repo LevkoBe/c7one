@@ -32,11 +32,23 @@ export function ModalContent({
   title,
   description,
   icon,
+  minWidth,
+  minHeight,
+  maxWidth,
+  maxHeight,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   title?: string;
   description?: string;
   icon?: React.ReactNode;
+  /** Minimum width in px. Capped at 100vw - 2rem. */
+  minWidth?: number;
+  /** Minimum height in px. Capped at 100vh - 2rem. */
+  minHeight?: number;
+  /** Maximum width in px. Still won't exceed 100vw - 2rem. */
+  maxWidth?: number;
+  /** Maximum height in px. Still won't exceed 100vh - 2rem. */
+  maxHeight?: number;
 }) {
   return (
     <Dialog.Portal>
@@ -57,9 +69,22 @@ export function ModalContent({
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          "max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]",
           className,
         )}
+        style={{
+          maxWidth: maxWidth
+            ? `min(${maxWidth}px, calc(100vw - 2rem))`
+            : "calc(100vw - 2rem)",
+          maxHeight: maxHeight
+            ? `min(${maxHeight}px, calc(100vh - 2rem))`
+            : "calc(100vh - 2rem)",
+          ...(minWidth !== undefined && {
+            minWidth: `min(${minWidth}px, calc(100vw - 2rem))`,
+          }),
+          ...(minHeight !== undefined && {
+            minHeight: `min(${minHeight}px, calc(100vh - 2rem))`,
+          }),
+        }}
         {...props}
       >
         {/* Header — same visual language as DynamicLeafHeader */}
