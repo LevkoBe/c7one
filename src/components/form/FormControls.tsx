@@ -205,6 +205,7 @@ export function Select({
         <RadixSelect.Content
           className={cn(
             "relative z-50 min-w-[8rem] overflow-hidden",
+            "max-h-[var(--radix-select-content-available-height)]",
             "bg-bg-elevated [border-width:var(--border-width)] border-border",
             "rounded shadow-c7-xl",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -214,7 +215,7 @@ export function Select({
           position="popper"
           sideOffset={4}
         >
-          <RadixSelect.Viewport className="p-1">
+          <RadixSelect.Viewport className="p-1 overflow-y-auto max-h-[inherit]">
             {options.map((opt) => (
               <RadixSelect.Item
                 key={opt.value}
