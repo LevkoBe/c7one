@@ -293,7 +293,7 @@ function PanelSlot({
       className={cn(
         "min-w-0 min-h-0 overflow-hidden flex",
         innerDirection,
-        floating && "border border-border shadow-md",
+        floating && "bg-bg-base border border-border shadow-md",
       )}
       style={{
         flex,

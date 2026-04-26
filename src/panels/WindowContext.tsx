@@ -534,3 +534,8 @@ export function useWindowContext() {
   if (!ctx) throw new Error("useWindowContext must be used inside <DynamicPanelRoot>");
   return ctx;
 }
+
+/** Returns null when called outside a DynamicPanelRoot / AppShell panel context. */
+export function useWindowContextSafe(): WindowContextValue | null {
+  return useContext(WindowContext);
+}
