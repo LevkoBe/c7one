@@ -59,7 +59,7 @@ export function ModalContent({
       <Dialog.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-          "w-full max-w-lg",
+          "w-full max-w-lg flex flex-col",
           "bg-bg-elevated [border-width:var(--border-width)] border-border",
           "rounded shadow-c7-card overflow-hidden",
           "transition-all duration-(--transition-speed)",
@@ -97,7 +97,7 @@ export function ModalContent({
 
         {/* Body */}
         <div
-          className="p-6 overflow-y-auto"
+          className="flex-1 min-h-0 p-6 overflow-y-auto"
           style={
             clampedCover !== undefined
               ? { height: `calc(${clampedCover} / 100 * (100vh - 2rem))` }

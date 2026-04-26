@@ -353,6 +353,7 @@ function LeafContent({ node }: { node: LeafNode }) {
   const { windows, collapsePanel, expandPanel, closePanel, splitPanel } =
     useWindowContext();
   const isDefault = node.isDefault ?? false;
+  const isPrimary = node.windowId === PRIMARY_WINDOW_ID;
   const windowDef = windows.find((w) => w.id === node.windowId) ?? null;
   const headless = windowDef?.headless ?? false;
   // Headless panels have no header strip, so the usable content area starts at y=0.
@@ -390,6 +391,13 @@ function LeafContent({ node }: { node: LeafNode }) {
   }, [effectiveHeaderH]);
 
   const onMouseLeave = useCallback(() => setHoveredEdge(null), []);
+
+  // The primary slot is a transparent passthrough: the canvas (z-0) must receive
+  // all pointer events. No header, no content, no [+] button — just an invisible
+  // size-reservation div that keeps the flex layout intact.
+  if (isPrimary) {
+    return <div className="w-full h-full pointer-events-none" />;
+  }
 
   return (
     <div
