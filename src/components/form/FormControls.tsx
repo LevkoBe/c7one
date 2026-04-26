@@ -167,26 +167,34 @@ Slider.displayName = "Slider";
 export interface SelectOption {
   value: string;
   label: string;
+  icon?: React.ReactNode;
   disabled?: boolean;
 }
 
 export interface SelectProps extends RadixSelect.SelectProps {
   options: SelectOption[];
   placeholder?: string;
+  minimal?: boolean;
   className?: string;
 }
 
 export function Select({
   options,
   placeholder = "Select…",
+  minimal = false,
   className,
   ...props
 }: SelectProps) {
+  const selectedIcon = minimal
+    ? options.find((o) => o.value === (props.value ?? props.defaultValue))?.icon
+    : null;
+
   return (
     <RadixSelect.Root {...props}>
       <RadixSelect.Trigger
         className={cn(
-          "flex h-9 w-full items-center justify-between px-3 text-sm",
+          "flex h-9 items-center justify-between text-sm",
+          minimal ? "w-auto px-2 gap-1" : "w-full px-3",
           "bg-bg-elevated text-fg-primary",
           "[border-width:var(--border-width)] border-border rounded",
           "transition-[border-color,box-shadow] duration-(--transition-speed)",
@@ -196,10 +204,21 @@ export function Select({
           className,
         )}
       >
-        <RadixSelect.Value placeholder={placeholder} />
-        <RadixSelect.Icon>
-          <ChevronDown width={12} height={12} aria-hidden="true" />
-        </RadixSelect.Icon>
+        {minimal ? (
+          <>
+            <span className="flex items-center">{selectedIcon}</span>
+            <RadixSelect.Icon>
+              <ChevronDown width={10} height={10} aria-hidden="true" />
+            </RadixSelect.Icon>
+          </>
+        ) : (
+          <>
+            <RadixSelect.Value placeholder={placeholder} />
+            <RadixSelect.Icon>
+              <ChevronDown width={12} height={12} aria-hidden="true" />
+            </RadixSelect.Icon>
+          </>
+        )}
       </RadixSelect.Trigger>
       <RadixSelect.Portal>
         <RadixSelect.Content
@@ -222,7 +241,7 @@ export function Select({
                 value={opt.value}
                 disabled={opt.disabled}
                 className={cn(
-                  "relative flex cursor-pointer select-none items-center",
+                  "relative flex cursor-pointer select-none items-center gap-2",
                   "rounded-[calc(var(--radius)*0.75)] px-3 py-1.5 text-sm",
                   "text-fg-primary outline-none",
                   "transition-colors duration-(--transition-speed)",
@@ -230,6 +249,9 @@ export function Select({
                   "data-disabled:pointer-events-none data-disabled:opacity-50",
                 )}
               >
+                {opt.icon && (
+                  <span className="flex items-center shrink-0">{opt.icon}</span>
+                )}
                 <RadixSelect.ItemText>{opt.label}</RadixSelect.ItemText>
               </RadixSelect.Item>
             ))}
