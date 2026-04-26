@@ -41,14 +41,14 @@ export function ModalContent({
   title?: string;
   description?: string;
   icon?: React.ReactNode;
-  /** Minimum width in px. Capped at 100vw - 2rem. */
-  minWidth?: number;
-  /** Minimum height in px. Capped at 100vh - 2rem. */
-  minHeight?: number;
-  /** Maximum width in px. Still won't exceed 100vw - 2rem. */
-  maxWidth?: number;
-  /** Maximum height in px. Still won't exceed 100vh - 2rem. */
-  maxHeight?: number;
+  /** Minimum width in px or CSS value (e.g. 300 or "30vw"). Capped at 100vw - 2rem. */
+  minWidth?: number | string;
+  /** Minimum height in px or CSS value (e.g. 200 or "30vh"). Capped at 100vh - 2rem. */
+  minHeight?: number | string;
+  /** Maximum width in px or CSS value (e.g. 520 or "50vw"). Still won't exceed 100vw - 2rem. */
+  maxWidth?: number | string;
+  /** Maximum height in px or CSS value (e.g. 600 or "70vh"). Still won't exceed 100vh - 2rem. */
+  maxHeight?: number | string;
 }) {
   return (
     <Dialog.Portal>
@@ -72,17 +72,17 @@ export function ModalContent({
           className,
         )}
         style={{
-          maxWidth: maxWidth
-            ? `min(${maxWidth}px, calc(100vw - 2rem))`
+          maxWidth: maxWidth !== undefined
+            ? `min(${typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth}, calc(100vw - 2rem))`
             : "calc(100vw - 2rem)",
-          maxHeight: maxHeight
-            ? `min(${maxHeight}px, calc(100vh - 2rem))`
+          maxHeight: maxHeight !== undefined
+            ? `min(${typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight}, calc(100vh - 2rem))`
             : "calc(100vh - 2rem)",
           ...(minWidth !== undefined && {
-            minWidth: `min(${minWidth}px, calc(100vw - 2rem))`,
+            minWidth: `min(${typeof minWidth === "number" ? `${minWidth}px` : minWidth}, calc(100vw - 2rem))`,
           }),
           ...(minHeight !== undefined && {
-            minHeight: `min(${minHeight}px, calc(100vh - 2rem))`,
+            minHeight: `min(${typeof minHeight === "number" ? `${minHeight}px` : minHeight}, calc(100vh - 2rem))`,
           }),
         }}
         {...props}
@@ -113,7 +113,7 @@ export function ModalContent({
         </div>
 
         {/* Body */}
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 overflow-auto flex flex-col">
           {description && (
             <Dialog.Description className="text-sm text-fg-muted mb-5">
               {description}

@@ -410,9 +410,12 @@ export function SettingsModalButton({
       </Modal.Trigger>
       <Modal.Content
         aria-label={resolvedLabel}
-        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+        maxWidth={520}
+        maxHeight="70vh"
       >
-        <SettingsPanel {...panelProps} />
+        <div className="p-4">
+          <SettingsPanel {...panelProps} />
+        </div>
       </Modal.Content>
     </Modal>
   );
