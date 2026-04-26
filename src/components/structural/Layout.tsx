@@ -36,7 +36,7 @@ export const Header = React.forwardRef<HTMLElement, HeaderProps>(
               <div className="flex-1 min-w-0 flex items-center">{children}</div>
             )}
             {actions && (
-              <div className="flex items-center gap-2 shrink-0 ml-auto overflow-x-auto">
+              <div className="flex items-center gap-2 min-w-0 ml-auto overflow-x-auto">
                 {actions}
               </div>
             )}
