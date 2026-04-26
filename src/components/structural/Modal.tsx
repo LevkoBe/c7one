@@ -32,21 +32,24 @@ export function ModalContent({
   title,
   description,
   icon,
-  coverPercent,
+  minWidth,
+  minHeight,
+  maxWidth,
+  maxHeight,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   title?: string;
   description?: string;
   icon?: React.ReactNode;
-  /** 0–100: portion of the viewport the modal covers vertically.
-   *  100 = full screen, 0 = header strip only. Omit for auto/content height. */
-  coverPercent?: number;
+  /** Minimum width in px. Capped at 100vw - 2rem. */
+  minWidth?: number;
+  /** Minimum height in px. Capped at 100vh - 2rem. */
+  minHeight?: number;
+  /** Maximum width in px. Still won't exceed 100vw - 2rem. */
+  maxWidth?: number;
+  /** Maximum height in px. Still won't exceed 100vh - 2rem. */
+  maxHeight?: number;
 }) {
-  const clampedCover =
-    coverPercent !== undefined
-      ? Math.max(0, Math.min(100, coverPercent))
-      : undefined;
-
   return (
     <Dialog.Portal>
       <Dialog.Overlay
@@ -59,7 +62,7 @@ export function ModalContent({
       <Dialog.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-          "w-full max-w-lg flex flex-col",
+          "w-full flex flex-col",
           "bg-bg-elevated [border-width:var(--border-width)] border-border",
           "rounded shadow-c7-card overflow-hidden",
           "transition-all duration-(--transition-speed)",
@@ -68,6 +71,20 @@ export function ModalContent({
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
+        style={{
+          maxWidth: maxWidth
+            ? `min(${maxWidth}px, calc(100vw - 2rem))`
+            : "calc(100vw - 2rem)",
+          maxHeight: maxHeight
+            ? `min(${maxHeight}px, calc(100vh - 2rem))`
+            : "calc(100vh - 2rem)",
+          ...(minWidth !== undefined && {
+            minWidth: `min(${minWidth}px, calc(100vw - 2rem))`,
+          }),
+          ...(minHeight !== undefined && {
+            minHeight: `min(${minHeight}px, calc(100vh - 2rem))`,
+          }),
+        }}
         {...props}
       >
         {/* Header — same visual language as DynamicLeafHeader */}
@@ -96,14 +113,7 @@ export function ModalContent({
         </div>
 
         {/* Body */}
-        <div
-          className="flex-1 min-h-0 p-6 overflow-y-auto"
-          style={
-            clampedCover !== undefined
-              ? { height: `calc(${clampedCover} / 100 * (100vh - 2rem))` }
-              : undefined
-          }
-        >
+        <div className="flex-1 min-h-0 p-6 overflow-y-auto">
           {description && (
             <Dialog.Description className="text-sm text-fg-muted mb-5">
               {description}
