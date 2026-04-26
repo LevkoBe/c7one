@@ -84,9 +84,74 @@ function DynamicPanelInner({ className }: { className?: string }) {
 
 function TreeNode({ node, newLeafId }: { node: PanelTreeNode; newLeafId?: string }) {
   if (node.type === "group") return <DynamicGroup node={node} newLeafId={newLeafId} />;
+  if (node.windowId === PRIMARY_WINDOW_ID) return <PrimaryLeafOverlay node={node} />;
   return (
-    <div className="flex flex-col w-full h-full min-h-0">
+    <div className="flex flex-col w-full h-full min-h-0 pointer-events-auto">
       <LeafContent node={node} />
+    </div>
+  );
+}
+
+// ─── PrimaryLeafOverlay ───────────────────────────────────────────────────────
+//
+// The primary slot must be fully transparent to the canvas layer below it (z-0).
+// pointer-events-none on the container passes all mouse/click events through to
+// the canvas. Edge-proximity detection uses a window-level mousemove listener
+// (unaffected by CSS pointer-events). The [+] split button itself has the default
+// pointer-events: auto and remains clickable even inside the pointer-events-none
+// parent — CSS allows descendants to opt back in.
+
+function PrimaryLeafOverlay({ node }: { node: LeafNode }) {
+  const { splitPanel } = useWindowContext();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredEdge, setHoveredEdge] = useState<
+    "top" | "bottom" | "left" | "right" | null
+  >(null);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+        setHoveredEdge(null);
+        return;
+      }
+
+      const candidates = [
+        { edge: "top" as const,    dist: y },
+        { edge: "bottom" as const, dist: rect.height - y },
+        { edge: "left" as const,   dist: x },
+        { edge: "right" as const,  dist: rect.width - x },
+      ];
+      const best = candidates.reduce((a, b) => (a.dist < b.dist ? a : b));
+      setHoveredEdge(best.dist <= EDGE_T ? best.edge : null);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full pointer-events-none">
+      {hoveredEdge && (
+        <AddPanelButton
+          edge={hoveredEdge}
+          hasHeader={false}
+          onSplit={(dir, pos) => {
+            let sizePct: number | undefined;
+            if (containerRef.current) {
+              const rect = containerRef.current.getBoundingClientRect();
+              const slotPx = dir === "horizontal" ? rect.width : rect.height;
+              if (slotPx > 0) sizePct = Math.min(50, (DEFAULT_SPLIT_PX / slotPx) * 100);
+            }
+            splitPanel(node.id, dir, pos, sizePct);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -294,6 +359,9 @@ function PanelSlot({
         "min-w-0 min-h-0 overflow-hidden flex",
         innerDirection,
         floating && "bg-bg-base border border-border shadow-md",
+        // Non-primary slots opt back into pointer events (the panel layer
+        // wrapper is pointer-events-none so the primary slot stays transparent).
+        !isPrimary && "pointer-events-auto",
       )}
       style={{
         flex,
@@ -325,7 +393,7 @@ function ResizeHandle({
     <div
       onMouseDown={onStartDrag}
       className={cn(
-        "shrink-0 relative flex items-center justify-center select-none",
+        "shrink-0 relative flex items-center justify-center select-none pointer-events-auto",
         "bg-transparent hover:bg-accent/20 transition-colors duration-(--transition-speed)",
         "focus-visible:outline-none",
         isH ? "cursor-col-resize" : "cursor-row-resize",
@@ -353,7 +421,6 @@ function LeafContent({ node }: { node: LeafNode }) {
   const { windows, collapsePanel, expandPanel, closePanel, splitPanel } =
     useWindowContext();
   const isDefault = node.isDefault ?? false;
-  const isPrimary = node.windowId === PRIMARY_WINDOW_ID;
   const windowDef = windows.find((w) => w.id === node.windowId) ?? null;
   const headless = windowDef?.headless ?? false;
   // Headless panels have no header strip, so the usable content area starts at y=0.
@@ -391,13 +458,6 @@ function LeafContent({ node }: { node: LeafNode }) {
   }, [effectiveHeaderH]);
 
   const onMouseLeave = useCallback(() => setHoveredEdge(null), []);
-
-  // The primary slot is a transparent passthrough: the canvas (z-0) must receive
-  // all pointer events. No header, no content, no [+] button — just an invisible
-  // size-reservation div that keeps the flex layout intact.
-  if (isPrimary) {
-    return <div className="w-full h-full pointer-events-none" />;
-  }
 
   return (
     <div
@@ -455,16 +515,18 @@ function LeafContent({ node }: { node: LeafNode }) {
 interface AddPanelButtonProps {
   edge: "top" | "bottom" | "left" | "right";
   onSplit: (direction: SplitDirection, position: "before" | "after") => void;
+  /** Pass false for headerless slots so the top button sits at the real edge. */
+  hasHeader?: boolean;
 }
 
-function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
+function AddPanelButton({ edge, onSplit, hasHeader = true }: AddPanelButtonProps) {
   const direction: SplitDirection =
     edge === "left" || edge === "right" ? "horizontal" : "vertical";
   const position: "before" | "after" =
     edge === "top" || edge === "left" ? "before" : "after";
 
   const posCls = {
-    top: "top-9 left-1/2 -translate-x-1/2",
+    top: hasHeader ? "top-9 left-1/2 -translate-x-1/2" : "top-1 left-1/2 -translate-x-1/2",
     bottom: "bottom-1 left-1/2 -translate-x-1/2",
     left: "left-1 top-1/2 -translate-y-1/2",
     right: "right-1 top-1/2 -translate-y-1/2",
@@ -475,7 +537,7 @@ function AddPanelButton({ edge, onSplit }: AddPanelButtonProps) {
       onClick={() => onSplit(direction, position)}
       className={cn(
         "absolute z-20 w-5 h-5 rounded [border-width:var(--border-width)] border-transparent",
-        "bg-accent text-bg-base",
+        "bg-accent text-bg-base pointer-events-auto",
         "flex items-center justify-center",
         "hover:scale-110 active:scale-95 transition-transform duration-(--transition-speed)",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",

@@ -184,7 +184,7 @@ export { DynamicPanelRoot } from "./panels";
 export type { DynamicPanelRootProps } from "./panels";
 export { WindowSelector } from "./panels";
 export type { WindowSelectorProps } from "./panels";
-export { useWindowContext, PRIMARY_WINDOW_ID } from "./panels";
+export { useWindowContext, useWindowContextSafe, PRIMARY_WINDOW_ID } from "./panels";
 export type {
   WindowDef,
   PanelTreeNode,

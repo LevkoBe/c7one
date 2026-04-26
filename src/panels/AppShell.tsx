@@ -237,7 +237,7 @@ export function AppShell({
                 className="absolute z-10 pointer-events-none"
                 style={{ inset: `${splitMargin}px` }}
               >
-                <div className="pointer-events-auto w-full h-full">
+                <div className="pointer-events-none w-full h-full">
                   <DynamicPanelRoot
                     windows={allWindows}
                     layout={layout!}
