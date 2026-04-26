@@ -2,7 +2,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import { renderHook, act } from "@testing-library/react";
 import React from "react";
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { WindowProvider, useWindowContext } from "../WindowContext";
+import { WindowProvider, useWindowContext, PRIMARY_WINDOW_ID } from "../WindowContext";
 import { DynamicPanelRoot } from "../DynamicPanels";
 import type { LayoutNodeDecl, WindowDef } from "../WindowContext";
 
@@ -432,6 +432,65 @@ describe("DynamicPanelRoot — close panel interaction", () => {
     );
     fireEvent.click(screen.getByLabelText("Close panel"));
     expect(screen.getByTestId("window-A")).toBeInTheDocument();
+  });
+});
+
+// ─── PRIMARY_WINDOW_ID constant ───────────────────────────────────────────────
+
+describe("PRIMARY_WINDOW_ID", () => {
+  it("is the reserved string '__primary__'", () => {
+    expect(PRIMARY_WINDOW_ID).toBe("__primary__");
+  });
+});
+
+// ─── headless WindowDef ───────────────────────────────────────────────────────
+
+const WIN_HEADLESS: WindowDef = {
+  id: "win-headless",
+  title: "Headless Window",
+  headless: true,
+  component: () => <div data-testid="headless-content">headless</div>,
+};
+
+const HEADLESS_LAYOUT: LayoutNodeDecl = {
+  type: "leaf",
+  windowId: "win-headless",
+  isDefault: true,
+};
+
+describe("DynamicPanelRoot — headless windows", () => {
+  it("renders the component for a headless window", () => {
+    render(
+      <DynamicPanelRoot windows={[WIN_HEADLESS]} layout={HEADLESS_LAYOUT} />,
+    );
+    expect(screen.getByTestId("headless-content")).toBeInTheDocument();
+  });
+
+  it("suppresses the panel header strip — title does not appear", () => {
+    render(
+      <DynamicPanelRoot windows={[WIN_HEADLESS]} layout={HEADLESS_LAYOUT} />,
+    );
+    expect(screen.queryByText("Headless Window")).not.toBeInTheDocument();
+  });
+
+  it("excludes headless windows from the WindowSelector", () => {
+    const layout: LayoutNodeDecl = {
+      type: "group",
+      direction: "horizontal",
+      children: [
+        { type: "leaf", windowId: "win-a", isDefault: true },
+        { type: "leaf", windowId: null },
+      ],
+    };
+    render(
+      <DynamicPanelRoot
+        windows={[WIN_A, WIN_HEADLESS]}
+        layout={layout}
+      />,
+    );
+    expect(screen.getByText("Select Window")).toBeInTheDocument();
+    expect(screen.getAllByText("Window A").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Headless Window")).not.toBeInTheDocument();
   });
 });
 

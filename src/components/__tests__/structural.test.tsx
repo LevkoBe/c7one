@@ -177,6 +177,53 @@ describe("Header", () => {
   });
 });
 
+describe("Header — logo slot", () => {
+  it("renders logo content", () => {
+    render(<Header logo={<span>MyLogo</span>} />);
+    expect(screen.getByText("MyLogo")).toBeInTheDocument();
+  });
+
+  it("logo wrapper has shrink-0 so it does not compress in flex", () => {
+    const { container } = render(<Header logo={<span>L</span>} />);
+    const logoWrapper = container.querySelector(".shrink-0");
+    expect(logoWrapper).toBeInTheDocument();
+    expect(logoWrapper).toContainElement(screen.getByText("L"));
+  });
+
+  it("logo renders alongside children", () => {
+    render(<Header logo={<span>Logo</span>}><nav>Nav</nav></Header>);
+    expect(screen.getByText("Logo")).toBeInTheDocument();
+    expect(screen.getByRole("navigation")).toBeInTheDocument();
+  });
+});
+
+describe("Header — actions slot", () => {
+  it("renders actions content", () => {
+    render(<Header actions={<button>Action</button>} />);
+    expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
+  });
+
+  it("renders all three slots together", () => {
+    render(
+      <Header logo={<span>Logo</span>} actions={<button>Act</button>}>
+        <nav>Nav</nav>
+      </Header>,
+    );
+    expect(screen.getByText("Logo")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Act" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation")).toBeInTheDocument();
+  });
+
+  it("without logo or actions, justify-between layout is used (no shrink-0 logo wrapper)", () => {
+    const { container } = render(<Header><span>child</span></Header>);
+    // In unstructured mode the header does not wrap children in a shrink-0 div
+    const header = container.querySelector("header")!;
+    expect(header.className).not.toContain("justify-between");
+    // The child renders directly
+    expect(screen.getByText("child")).toBeInTheDocument();
+  });
+});
+
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 describe("Footer", () => {
@@ -188,6 +235,35 @@ describe("Footer", () => {
   it("renders children", () => {
     render(<Footer>Links</Footer>);
     expect(screen.getByText("Links")).toBeInTheDocument();
+  });
+});
+
+describe("Footer — scrollable prop", () => {
+  it("scrollable=true adds h-14 class", () => {
+    const { container } = render(<Footer scrollable />);
+    expect(container.querySelector("footer")!.className).toContain("h-14");
+  });
+
+  it("scrollable=true adds overflow-x-auto class", () => {
+    const { container } = render(<Footer scrollable />);
+    expect(container.querySelector("footer")!.className).toContain(
+      "overflow-x-auto",
+    );
+  });
+
+  it("scrollable=false (default) includes py-8 padding", () => {
+    const { container } = render(<Footer />);
+    expect(container.querySelector("footer")!.className).toContain("py-8");
+  });
+
+  it("scrollable=true does not include py-8", () => {
+    const { container } = render(<Footer scrollable />);
+    expect(container.querySelector("footer")!.className).not.toContain("py-8");
+  });
+
+  it("scrollable footer renders children", () => {
+    render(<Footer scrollable><button>Tab</button></Footer>);
+    expect(screen.getByRole("button", { name: "Tab" })).toBeInTheDocument();
   });
 });
 

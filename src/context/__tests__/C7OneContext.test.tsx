@@ -321,6 +321,36 @@ describe("setToken / injectTokens — custom tokens", () => {
   });
 });
 
+// ─── splitMargin ──────────────────────────────────────────────────────────────
+
+describe("C7OneProvider — splitMargin", () => {
+  it("defaults to 0 when config.splitMargin is not set", () => {
+    const { result } = renderWithProvider();
+    expect(result.current.splitMargin).toBe(0);
+  });
+
+  it("reads splitMargin from config", () => {
+    const { result } = renderWithProvider("classic", { splitMargin: 8 });
+    expect(result.current.splitMargin).toBe(8);
+  });
+
+  it("explicit splitMargin=0 matches the default", () => {
+    const { result } = renderWithProvider("classic", { splitMargin: 0 });
+    expect(result.current.splitMargin).toBe(0);
+  });
+
+  it("splitMargin is exposed on the context value", () => {
+    const { result } = renderWithProvider("classic", { splitMargin: 16 });
+    expect(result.current).toHaveProperty("splitMargin", 16);
+  });
+
+  it("splitMargin survives a setMode call", () => {
+    const { result } = renderWithProvider("classic", { splitMargin: 12 });
+    act(() => result.current.setMode("neo"));
+    expect(result.current.splitMargin).toBe(12);
+  });
+});
+
 describe("useC7One outside provider", () => {
   it("throws a descriptive error when used outside C7OneProvider", () => {
     // Suppress React's error boundary noise for this test
