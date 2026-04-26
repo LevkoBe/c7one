@@ -19,16 +19,34 @@ export function Modal({ open, onOpenChange, children }: ModalProps) {
 
 export const ModalTrigger = Dialog.Trigger;
 
+const closeBtnCls = cn(
+  "flex items-center justify-center w-5 h-5 rounded-sm",
+  "text-fg-muted hover:text-fg-primary hover:bg-bg-overlay",
+  "transition-[color,background-color] duration-(--transition-speed)",
+  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
+);
+
 export function ModalContent({
   className,
   children,
   title,
   description,
+  icon,
+  coverPercent,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   title?: string;
   description?: string;
+  icon?: React.ReactNode;
+  /** 0–100: portion of the viewport the modal covers vertically.
+   *  100 = full screen, 0 = header strip only. Omit for auto/content height. */
+  coverPercent?: number;
 }) {
+  const clampedCover =
+    coverPercent !== undefined
+      ? Math.max(0, Math.min(100, coverPercent))
+      : undefined;
+
   return (
     <Dialog.Portal>
       <Dialog.Overlay
@@ -43,7 +61,7 @@ export function ModalContent({
           "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
           "w-full max-w-lg",
           "bg-bg-elevated [border-width:var(--border-width)] border-border",
-          "rounded p-6 shadow-c7-card",
+          "rounded shadow-c7-card overflow-hidden",
           "transition-all duration-(--transition-speed)",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -52,27 +70,47 @@ export function ModalContent({
         )}
         {...props}
       >
-        {title && (
-          <Dialog.Title className="text-base font-semibold text-fg-primary mb-1">
-            {title}
-          </Dialog.Title>
-        )}
-        {description && (
-          <Dialog.Description className="text-sm text-fg-muted mb-5">
-            {description}
-          </Dialog.Description>
-        )}
-        {children}
-        <Dialog.Close
+        {/* Header — same visual language as DynamicLeafHeader */}
+        <div
           className={cn(
-            "absolute right-1 top-1 text-fg-muted hover:text-fg-primary",
-            "rounded-sm transition-colors duration-(--transition-speed)",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            "flex items-center gap-2 px-3 h-8 shrink-0",
+            "bg-bg-elevated border-b border-border",
+            "transition-[background-color,border-color] duration-(--transition-speed)",
           )}
-          aria-label="Close"
         >
-          <X width={15} height={15} aria-hidden="true" />
-        </Dialog.Close>
+          {icon && (
+            <span className="w-4 h-4 text-fg-muted flex items-center justify-center shrink-0">
+              {icon}
+            </span>
+          )}
+          {title ? (
+            <Dialog.Title className="flex-1 min-w-0 text-xs font-medium text-fg-primary truncate">
+              {title}
+            </Dialog.Title>
+          ) : (
+            <span className="flex-1" />
+          )}
+          <Dialog.Close className={closeBtnCls} aria-label="Close">
+            <X width={10} height={10} aria-hidden="true" />
+          </Dialog.Close>
+        </div>
+
+        {/* Body */}
+        <div
+          className="p-6 overflow-y-auto"
+          style={
+            clampedCover !== undefined
+              ? { height: `calc(${clampedCover} / 100 * (100vh - 2rem))` }
+              : undefined
+          }
+        >
+          {description && (
+            <Dialog.Description className="text-sm text-fg-muted mb-5">
+              {description}
+            </Dialog.Description>
+          )}
+          {children}
+        </div>
       </Dialog.Content>
     </Dialog.Portal>
   );
