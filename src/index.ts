@@ -140,8 +140,25 @@ export {
   TabsTrigger,
   TabsContent,
   Breadcrumb,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuRadioGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "./components/navigation";
-export type { BreadcrumbProps, BreadcrumbItem } from "./components/navigation";
+export type {
+  BreadcrumbProps,
+  BreadcrumbItem,
+  DropdownMenuItemProps,
+  DropdownMenuLabelProps,
+  DropdownMenuSubTriggerProps,
+} from "./components/navigation";
 
 // ─── Data Components ──────────────────────────────────────────────────────────
 export { Table, Pagination } from "./components/data/Table";
