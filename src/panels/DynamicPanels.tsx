@@ -156,6 +156,16 @@ function PrimaryLeafOverlay({ node }: { node: LeafNode }) {
   );
 }
 
+// ─── Primary containment check ────────────────────────────────────────────────
+// When the primary leaf is wrapped in a group (cross-direction split), the
+// PanelSlot for that group must still be pointer-events-none so events reach
+// the canvas behind it.
+
+function containsPrimary(node: PanelTreeNode): boolean {
+  if (node.type === "leaf") return node.windowId === PRIMARY_WINDOW_ID;
+  return node.children.some(containsPrimary);
+}
+
 // ─── DynamicGroup ─────────────────────────────────────────────────────────────
 //
 // Renders a flex row/col. Each child gets a flex-basis derived from its
@@ -285,10 +295,7 @@ function DynamicGroup({ node, newLeafId }: { node: GroupNode; newLeafId?: string
               targetFlex={targetFlex}
               innerDirection={isH ? "flex-col" : "flex-row"}
               isLeaf={child.type === "leaf"}
-              isPrimary={
-                child.type === "leaf" &&
-                (child as LeafNode).windowId === PRIMARY_WINDOW_ID
-              }
+              isPrimary={containsPrimary(child)}
             >
               <TreeNode node={child} newLeafId={getChildNewLeafId(child)} />
             </PanelSlot>
