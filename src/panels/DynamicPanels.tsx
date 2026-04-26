@@ -359,9 +359,9 @@ function PanelSlot({
         "min-w-0 min-h-0 overflow-hidden flex",
         innerDirection,
         floating && "bg-bg-base border border-border shadow-md",
-        // Non-primary slots opt back into pointer events (the panel layer
-        // wrapper is pointer-events-none so the primary slot stays transparent).
-        !isPrimary && "pointer-events-auto",
+        // Explicit on both branches: primary must stay none even when nested
+        // inside a non-primary group whose PanelSlot has pointer-events-auto.
+        isPrimary ? "pointer-events-none" : "pointer-events-auto",
       )}
       style={{
         flex,
