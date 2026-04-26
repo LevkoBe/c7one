@@ -5,6 +5,7 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Plus, Minus, Maximize2, X } from "lucide-react";
+import { useC7One } from "../context/C7OneContext";
 import { WindowProvider, useWindowContext } from "./WindowContext";
 import type {
   GroupNode,
@@ -14,6 +15,7 @@ import type {
   SplitDirection,
   WindowDef,
 } from "./WindowContext";
+import { PRIMARY_WINDOW_ID } from "./WindowContext";
 import { WindowSelector } from "./WindowSelector";
 import { cn } from "../utils/cn";
 
@@ -217,6 +219,11 @@ function DynamicGroup({ node, newLeafId }: { node: GroupNode; newLeafId?: string
               isNew={isNewChild(child)}
               targetFlex={targetFlex}
               innerDirection={isH ? "flex-col" : "flex-row"}
+              isLeaf={child.type === "leaf"}
+              isPrimary={
+                child.type === "leaf" &&
+                (child as LeafNode).windowId === PRIMARY_WINDOW_ID
+              }
             >
               <TreeNode node={child} newLeafId={getChildNewLeafId(child)} />
             </PanelSlot>
@@ -240,13 +247,22 @@ function PanelSlot({
   isNew,
   targetFlex,
   innerDirection,
+  isLeaf,
+  isPrimary,
   children,
 }: {
   isNew: boolean;
   targetFlex: string;
   innerDirection: "flex-col" | "flex-row";
+  isLeaf: boolean;
+  /** True when this slot holds the PRIMARY_WINDOW_ID leaf — no chrome applied. */
+  isPrimary: boolean;
   children: React.ReactNode;
 }) {
+  const { splitMargin } = useC7One();
+  // Primary slot is always transparent — no border/shadow, no rounded corners.
+  // It just claims space so the absolute canvas behind shows through.
+  const floating = isLeaf && !isPrimary && splitMargin > 0;
   const [flex, setFlex] = useState(isNew ? "0 0 0px" : targetFlex);
 
   // Keep flex in sync with external target (collapse/expand changes targetFlex
@@ -274,11 +290,16 @@ function PanelSlot({
 
   return (
     <div
-      className={cn("min-w-0 min-h-0 overflow-hidden flex", innerDirection)}
+      className={cn(
+        "min-w-0 min-h-0 overflow-hidden flex",
+        innerDirection,
+        floating && "border border-border shadow-md",
+      )}
       style={{
         flex,
         transition:
           "flex-grow var(--transition-speed) ease, flex-basis var(--transition-speed) ease",
+        borderRadius: floating ? "var(--radius)" : undefined,
       }}
     >
       {children}
@@ -295,7 +316,11 @@ function ResizeHandle({
   direction: SplitDirection;
   onStartDrag: (e: React.MouseEvent) => void;
 }) {
+  const { splitMargin } = useC7One();
   const isH = direction === "horizontal";
+  // When splitMargin > 0 the handle fills the visual gap between panels.
+  // Minimum 4px so the drag target remains easily clickable.
+  const handlePx = splitMargin > 0 ? Math.max(4, splitMargin) : 4;
   return (
     <div
       onMouseDown={onStartDrag}
@@ -303,8 +328,9 @@ function ResizeHandle({
         "shrink-0 relative flex items-center justify-center select-none",
         "bg-transparent hover:bg-accent/20 transition-colors duration-(--transition-speed)",
         "focus-visible:outline-none",
-        isH ? "w-1 cursor-col-resize" : "h-1 cursor-row-resize",
+        isH ? "cursor-col-resize" : "cursor-row-resize",
       )}
+      style={{ [isH ? "width" : "height"]: `${handlePx}px` }}
     >
       <div
         className={cn(
@@ -328,6 +354,9 @@ function LeafContent({ node }: { node: LeafNode }) {
     useWindowContext();
   const isDefault = node.isDefault ?? false;
   const windowDef = windows.find((w) => w.id === node.windowId) ?? null;
+  const headless = windowDef?.headless ?? false;
+  // Headless panels have no header strip, so the usable content area starts at y=0.
+  const effectiveHeaderH = headless ? 0 : HEADER_H;
 
   const [hoveredEdge, setHoveredEdge] = useState<
     "top" | "bottom" | "left" | "right" | null
@@ -342,14 +371,13 @@ function LeafContent({ node }: { node: LeafNode }) {
     const w = rect.width;
     const h = rect.height;
 
-    // Don't trigger inside the header strip
-    if (y < HEADER_H) {
+    if (y < effectiveHeaderH) {
       setHoveredEdge(null);
       return;
     }
 
-    const cy = y - HEADER_H;
-    const ch = h - HEADER_H;
+    const cy = y - effectiveHeaderH;
+    const ch = h - effectiveHeaderH;
 
     const candidates = [
       { edge: "top" as const, dist: cy },
@@ -359,7 +387,7 @@ function LeafContent({ node }: { node: LeafNode }) {
     ];
     const best = candidates.reduce((a, b) => (a.dist < b.dist ? a : b));
     setHoveredEdge(best.dist <= EDGE_T ? best.edge : null);
-  }, []);
+  }, [effectiveHeaderH]);
 
   const onMouseLeave = useCallback(() => setHoveredEdge(null), []);
 
@@ -370,15 +398,17 @@ function LeafContent({ node }: { node: LeafNode }) {
       onMouseLeave={onMouseLeave}
       className="relative flex flex-col w-full h-full"
     >
-      {/* Header strip — always visible, even when collapsed */}
-      <DynamicLeafHeader
-        node={node}
-        windowDef={windowDef}
-        isDefault={isDefault}
-        onClose={() => closePanel(node.id)}
-        onCollapse={() => collapsePanel(node.id)}
-        onExpand={() => expandPanel(node.id)}
-      />
+      {/* Header strip — skipped entirely for headless windows */}
+      {!headless && (
+        <DynamicLeafHeader
+          node={node}
+          windowDef={windowDef}
+          isDefault={isDefault}
+          onClose={() => closePanel(node.id)}
+          onCollapse={() => collapsePanel(node.id)}
+          onExpand={() => expandPanel(node.id)}
+        />
+      )}
 
       {/* Content area — not rendered when collapsed */}
       {!node.collapsed && (
@@ -401,9 +431,6 @@ function LeafContent({ node }: { node: LeafNode }) {
               const rect = containerRef.current.getBoundingClientRect();
               const slotPx = dir === "horizontal" ? rect.width : rect.height;
               if (slotPx > 0) {
-                // New panel gets min(DEFAULT_SPLIT_PX, 50% of slot) so it
-                // feels like a side-panel on large slots but splits equally
-                // on small ones.
                 sizePct = Math.min(50, (DEFAULT_SPLIT_PX / slotPx) * 100);
               }
             }

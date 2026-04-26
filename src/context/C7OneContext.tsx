@@ -273,6 +273,8 @@ export function C7OneProvider({
     [colors, setColors, setShape, setMotion, setDepth, setToken],
   );
 
+  const splitMargin = config.splitMargin ?? 0;
+
   const value = useMemo<C7OneContextValue>(
     () => ({
       mode,
@@ -290,6 +292,7 @@ export function C7OneProvider({
       injectTokens,
       getAllTokens,
       setTokenValue,
+      splitMargin,
     }),
     [
       mode,
@@ -307,6 +310,7 @@ export function C7OneProvider({
       injectTokens,
       getAllTokens,
       setTokenValue,
+      splitMargin,
     ],
   );
 

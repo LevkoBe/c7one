@@ -10,11 +10,25 @@ import React, {
 
 // ─── Window Registry ──────────────────────────────────────────────────────────
 
+/**
+ * Reserved window ID for the primary (canvas) slot in AppShell layouts.
+ * Place a leaf with this ID in your layout declaration to reserve space for the
+ * primary window. AppShell substitutes it with a transparent placeholder so the
+ * canvas content (rendered behind the panel layer) shows through.
+ */
+export const PRIMARY_WINDOW_ID = "__primary__";
+
 export interface WindowDef {
   id: string;
   title: string;
   icon?: React.ReactNode;
   component: React.ComponentType;
+  /**
+   * When true the 32 px panel header strip is suppressed entirely.
+   * Used internally for the PRIMARY_WINDOW_ID slot; also available for any
+   * window that should fill its panel edge-to-edge (e.g. an image viewer).
+   */
+  headless?: boolean;
 }
 
 // ─── Panel Tree (N-ary group model) ──────────────────────────────────────────

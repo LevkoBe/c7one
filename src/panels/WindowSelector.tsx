@@ -14,7 +14,7 @@ export function WindowSelector({ leafId }: WindowSelectorProps) {
         Select a window
       </span>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-sm">
-        {windows.map((win) => (
+        {windows.filter((win) => !win.headless).map((win) => (
           <button
             key={win.id}
             onClick={() => assignWindow(leafId, win.id)}

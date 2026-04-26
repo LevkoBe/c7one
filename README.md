@@ -125,7 +125,8 @@ C7ONE
 │
 ├── Layout Layer (Canvas)
 │   ├── Static panels         ← PanelRoot, PanelSplit, PanelLeaf
-│   └── Dynamic panels        ← DynamicPanelRoot, WindowSelector, useWindowContext
+│   ├── Dynamic panels        ← DynamicPanelRoot, WindowSelector, useWindowContext
+│   └── App shell             ← AppShell, PRIMARY_WINDOW_ID, usePrimaryBounds
 │
 ├── Settings Layer
 │   ├── SettingsPanel         ← live config management station
@@ -167,6 +168,7 @@ The single provider that wraps every app. Manages all visual state and injects C
     tokens: {
       "--custom-sidebar-width": "260px",
     },
+    splitMargin: 8,            // gap between floating panels (0 = seamless)
   }}
 >
   <App />
@@ -178,7 +180,7 @@ The single provider that wraps every app. Manages all visual state and injects C
 | Prop          | Type          | Default     | Description                                                 |
 | ------------- | ------------- | ----------- | ----------------------------------------------------------- |
 | `defaultMode` | `DesignMode`  | `"classic"` | Initial design mode                                         |
-| `config`      | `C7OneConfig` | `{}`        | Initial token values (colors, shape, motion, depth, tokens) |
+| `config`      | `C7OneConfig` | `{}`        | Token values: `colors`, `shape`, `motion`, `depth`, `tokens`, `splitMargin` |
 | `storageKey`  | `string`      | —           | localStorage key for persisting settings across sessions    |
 
 ### `useC7One()`
@@ -302,8 +304,8 @@ All components are Tailwind-styled wrappers around Radix UI primitives (via shad
 | ------------ | ------------ | ------------------------------------------------------------- |
 | `Card`       | `div`        | variants: flat, elevated, outlined, glass                     |
 | `Modal`      | Radix Dialog | backdrop, close button, `Modal.Trigger` / `Modal.Content` API |
-| `Header`     | `div`        | sticky option, logo + nav slots                               |
-| `Footer`     | `div`        | link columns slot                                             |
+| `Header`     | `div`        | `logo` (left) + `children` (center) + `actions` (right, scrollable on overflow); `sticky` option |
+| `Footer`     | `div`        | `scrollable` → `h-14` horizontal icon tab bar (used by AppShell on mobile); default → padded footer |
 | `Section`    | `div`        | max-width container + standard padding                        |
 | `Scrollable` | `div`        | `axis` (x/y/both) + `overflow` (auto/always/hidden) props     |
 
@@ -554,6 +556,16 @@ const layout: LayoutNodeDecl = {
 };
 ```
 
+### `WindowDef`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Unique identifier |
+| `title` | `string` | Display name shown in the panel header and window-selector grid |
+| `icon` | `ReactNode` | Optional icon shown in the panel header and selector |
+| `component` | `ComponentType` | Rendered inside the panel body |
+| `headless` | `boolean` | Suppress the 32px panel header strip (edge-to-edge content). Also hides the window from the add-window selector. Used internally by `PRIMARY_WINDOW_ID`. |
+
 ### User operations
 
 - **Split** — hover near any edge of a panel → click the `+` button to split horizontally or vertically
@@ -589,7 +601,149 @@ const {
 
 The dynamic system uses plain CSS flex with custom drag handles — no `react-resizable-panels` dependency. Moving a divider only affects the two adjacent panels; all others are unaffected.
 
-## 13. i18n
+## 13. AppShell
+
+`AppShell` is the opinionated top-level layout for canvas-first applications — maps, editors, dashboards — where primary content fills the full screen and panels float on top of it.
+
+It composes a fixed `Header`, your primary canvas (`children`), and a `DynamicPanelRoot` panel layer into a single production-ready shell. On mobile it swaps floating panels for a bottom-sheet + footer tab bar.
+
+```tsx
+import { AppShell, PRIMARY_WINDOW_ID } from "@levkobe/c7one";
+import type { WindowDef, LayoutNodeDecl } from "@levkobe/c7one";
+
+const WINDOWS: WindowDef[] = [
+  { id: "inspector", title: "Inspector", icon: <SliderIcon />, component: InspectorPanel },
+  { id: "log",       title: "Log",       icon: <TerminalIcon />, component: LogPanel },
+];
+
+// Left 55 %: transparent primary slot — your canvas shows through here.
+// Right 45 %: two solid floating panels stacked vertically.
+const LAYOUT: LayoutNodeDecl = {
+  type: "group",
+  direction: "horizontal",
+  sizes: [55, 45],
+  children: [
+    { type: "leaf", windowId: PRIMARY_WINDOW_ID, isDefault: true },
+    {
+      type: "group",
+      direction: "vertical",
+      sizes: [50, 50],
+      children: [
+        { type: "leaf", windowId: "inspector" },
+        { type: "leaf", windowId: "log" },
+      ],
+    },
+  ],
+};
+
+<C7OneProvider config={{ splitMargin: 8 }}>
+  <AppShell
+    logo={<MyLogo />}
+    showSettings
+    showThemeSwitcher
+    settingsExpose={["mode", "colors", "--radius"]}
+    windows={WINDOWS}
+    layout={LAYOUT}
+    storageKey="my-app-layout"
+  >
+    <MyCanvas />  {/* fills 100 % of the work area, always behind panels */}
+  </AppShell>
+</C7OneProvider>
+```
+
+### Layout model
+
+```
+AppShell
+├── Header (h-14, inalienable — cannot be minimized / closed / split)
+└── WorkArea (flex-1, relative)
+     ├── Primary (absolute inset-0, z-0)  ← children — your canvas
+     └── PanelLayer (absolute z-10, inset: splitMargin px)
+          └── DynamicPanelRoot
+               ├── PRIMARY_WINDOW_ID leaf  ← transparent slot, reserves space
+               │                             so panels don't cover the full screen
+               └── other panel leaves      ← floating windows with solid chrome
+```
+
+### `PRIMARY_WINDOW_ID`
+
+A reserved constant (`"__primary__"`) used as `windowId` in the layout tree to designate the transparent primary slot. The slot is headless (no header strip), invisible (no background), and is automatically:
+
+- **Filtered from the add-window selector** — users cannot assign it to an empty panel
+- **Filtered from the mobile footer** — the canvas is always visible, it never needs a tab
+
+```tsx
+import { PRIMARY_WINDOW_ID } from "@levkobe/c7one";
+
+const layout: LayoutNodeDecl = {
+  type: "leaf",
+  windowId: PRIMARY_WINDOW_ID,  // transparent; canvas shows through
+  isDefault: true,
+};
+```
+
+### `splitMargin` and floating chrome
+
+`splitMargin` is configured on `C7OneProvider`, not `AppShell` directly, because it also affects standalone `DynamicPanelRoot` usage.
+
+| Value | Effect |
+| --- | --- |
+| `0` (default) | Seamless — panels fill edge-to-edge, no gaps (classic split look) |
+| `> 0` | Floating card aesthetic — gaps between panels reveal the canvas behind; panels get a border, shadow, and border-radius from your CCC tokens |
+
+The resize-handle thickness scales with `splitMargin` (minimum 4 px).
+
+### `usePrimaryBounds()`
+
+Returns the position and size of the `PRIMARY_WINDOW_ID` slot, expressed in the same coordinate space your canvas renders in (relative to the AppShell work area's top-left corner).
+
+```tsx
+import { usePrimaryBounds } from "@levkobe/c7one";
+
+function MyCanvas() {
+  const { x, y, width, height, ready } = usePrimaryBounds();
+
+  // Center content precisely at the visible primary slot.
+  const cx = ready ? x + width / 2 : myCanvasWidth / 2;
+  const cy = ready ? y + height / 2 : myCanvasHeight / 2;
+}
+```
+
+`ready` is `false` until the first `ResizeObserver` measurement fires. Fall back to your own canvas dimensions until then.
+
+**Why not `window.innerWidth / 2`?** The primary slot is only a portion of the work area — the rest is occupied by floating panels. `usePrimaryBounds()` tells you exactly where the visible area is so you can center, clamp, and snap content to it rather than the full screen.
+
+### `AppShellProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `logo` | `ReactNode` | — | Left slot of the header: logo, wordmark, or icon |
+| `headerActions` | `ReactNode` | — | Extra content in the header, rendered before built-in buttons |
+| `showSettings` | `boolean` | `false` | Render the built-in settings modal button |
+| `showThemeSwitcher` | `boolean` | `false` | Render the built-in dark/light theme toggle |
+| `settingsExpose` | `SettingKey[]` | — | Keys to expose in the settings panel |
+| `settingsPresets` | `SettingsPreset[]` | — | Preset list for the settings panel |
+| `settingsRenderAppSettings` | `() => ReactNode` | — | Slot for app-specific controls in the settings panel |
+| `darkTheme` | `ThemeTokens` | `dark` | Colors applied when switching to dark |
+| `lightTheme` | `ThemeTokens` | `light` | Colors applied when switching to light |
+| `children` | `ReactNode` | **required** | Primary content — fills 100 % of the work area, always behind panels |
+| `windows` | `WindowDef[]` | — | Window registry; drives floating panels (desktop) and tab bar (mobile) |
+| `layout` | `LayoutNodeDecl` | — | Initial panel layout (ignored when `storageKey` restores a saved layout) |
+| `storageKey` | `string` | — | `localStorage` key for layout persistence |
+| `className` | `string` | — | Extra classes on the root element |
+
+### Mobile behavior (≤ 767 px)
+
+The floating panel layer is replaced by a bottom-sheet model:
+
+- The footer becomes a horizontally-scrollable icon tab bar — one button per window
+- Tapping a tab opens a **bottom sheet** (50 % viewport height) that slides up over the canvas
+- The primary canvas remains fully visible behind the sheet
+- Tapping the active tab again or the `×` button closes the sheet
+
+`PRIMARY_WINDOW_ID` is never shown in the mobile tab bar.
+
+## 14. i18n
 
 C7ONE ships a lightweight i18n layer used internally by `SettingsPanel` and `DataGrid`. You can extend it with your own app strings using the same `t()` hook.
 
@@ -642,7 +796,7 @@ Pass your own per-locale string maps via `messages`:
 | `messages`      | `Partial<Record<Locale, Record<string, string>>>` | `{}`    | App-specific strings merged on top of lib messages |
 | `storageKey`    | `string`                                          | —       | localStorage key for persisting the locale         |
 
-## 14. AppConfig Layer
+## 15. AppConfig Layer
 
 Per-app config for things that have nothing to do with the shared library — like node colors in DigraVinci or category settings in SkillTracker. Fully typed via generics, completely isolated from C7ONE's own config.
 
@@ -662,7 +816,7 @@ const config = useAppConfig<DigraVinciConfig>();
 
 App-specific logic never bleeds into the shared library.
 
-## 15. File Structure
+## 16. File Structure
 
 ```
 c7one/
@@ -689,10 +843,12 @@ c7one/
 │   │   └── controls/              ← RandomizeButton, ThemeToggleButton
 │   │
 │   ├── panels/
-│   │   ├── Panels.tsx             ← PanelRoot, PanelSplit, PanelLeaf (static)
-│   │   ├── DynamicPanels.tsx      ← DynamicPanelRoot (dynamic, user-operated)
-│   │   ├── WindowContext.tsx      ← WindowProvider, useWindowContext, tree helpers
-│   │   └── WindowSelector.tsx     ← picker UI shown in empty dynamic panel slots
+│   │   ├── Panels.tsx               ← PanelRoot, PanelSplit, PanelLeaf (static)
+│   │   ├── DynamicPanels.tsx        ← DynamicPanelRoot (dynamic, user-operated)
+│   │   ├── WindowContext.tsx        ← WindowProvider, useWindowContext, tree helpers
+│   │   ├── WindowSelector.tsx       ← picker UI shown in empty dynamic panel slots
+│   │   ├── AppShell.tsx             ← AppShell (header + floating panels + mobile layout)
+│   │   └── PrimaryBoundsContext.tsx ← usePrimaryBounds() coordinate pipeline
 │   │
 │   ├── settings/
 │   │   └── SettingsPanel.tsx      ← SettingsPanel, SettingsModalButton
@@ -719,7 +875,7 @@ c7one/
 └── package.json
 ```
 
-## 16. c7one-sandbox
+## 17. c7one-sandbox
 
 A companion app — the interactive showcase and component explorer for C7ONE.
 

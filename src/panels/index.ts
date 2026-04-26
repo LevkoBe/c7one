@@ -6,7 +6,7 @@ export { DynamicPanelRoot } from "./DynamicPanels";
 export type { DynamicPanelRootProps } from "./DynamicPanels";
 export { WindowSelector } from "./WindowSelector";
 export type { WindowSelectorProps } from "./WindowSelector";
-export { useWindowContext } from "./WindowContext";
+export { useWindowContext, PRIMARY_WINDOW_ID } from "./WindowContext";
 export type {
   WindowDef,
   PanelTreeNode,
@@ -18,3 +18,9 @@ export type {
   LayoutLeafDecl,
   WindowContextValue,
 } from "./WindowContext";
+
+// ─── App Shell ────────────────────────────────────────────────────────────────
+export { AppShell } from "./AppShell";
+export type { AppShellProps } from "./AppShell";
+export { usePrimaryBounds } from "./PrimaryBoundsContext";
+export type { PrimaryBounds } from "./PrimaryBoundsContext";

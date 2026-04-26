@@ -44,6 +44,12 @@ export interface C7OneConfig {
   depth?: DepthConfig;
   /** Arbitrary CSS custom properties injected onto :root */
   tokens?: Record<string, string>;
+  /**
+   * Gap in pixels between floating panel windows. 0 (default) recreates the
+   * classic seamless split look; values > 0 produce the floating-card aesthetic
+   * where the primary window is visible in the gaps between panels.
+   */
+  splitMargin?: number;
 }
 
 // ─── Context Value ────────────────────────────────────────────────────────────
@@ -72,6 +78,9 @@ export interface C7OneContextValue {
   getAllTokens: () => Record<string, string>;
   /** Set any token by CSS var name — routes to the correct typed setter internally. */
   setTokenValue: (name: string, value: string) => void;
+
+  /** Gap in pixels between floating panels. Sourced from C7OneConfig.splitMargin. */
+  splitMargin: number;
 }
 
 // ─── Mode Preset ──────────────────────────────────────────────────────────────

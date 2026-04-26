@@ -54,6 +54,7 @@ export type {
   CardVariant,
   ModalProps,
   HeaderProps,
+  FooterProps,
   SectionProps,
 } from "./components/structural";
 
@@ -183,7 +184,7 @@ export { DynamicPanelRoot } from "./panels";
 export type { DynamicPanelRootProps } from "./panels";
 export { WindowSelector } from "./panels";
 export type { WindowSelectorProps } from "./panels";
-export { useWindowContext } from "./panels";
+export { useWindowContext, PRIMARY_WINDOW_ID } from "./panels";
 export type {
   WindowDef,
   PanelTreeNode,
@@ -195,6 +196,12 @@ export type {
   LayoutLeafDecl,
   WindowContextValue,
 } from "./panels";
+
+// ─── App Shell ────────────────────────────────────────────────────────────────
+export { AppShell } from "./panels";
+export type { AppShellProps } from "./panels";
+export { usePrimaryBounds } from "./panels";
+export type { PrimaryBounds } from "./panels";
 
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 export { SettingsPanel, SettingsModalButton } from "./settings/SettingsPanel";
